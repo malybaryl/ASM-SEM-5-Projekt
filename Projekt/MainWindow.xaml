@@ -29,15 +29,32 @@
            VerticalAlignment="Center"
            HorizontalAlignment="Center"
            Foreground="White"
+           FontFamily="/Fonts/#Poppins"
            FontSize="22"
            />
 
             <StackPanel Grid.Row="1">
-                <RadioButton Content="Home"
+                
+                <RadioButton Content="Button#1"
                              Height="50"
                              Foreground="White"
+                             FontFamily="/Fonts/#Poppins"
                              FontSize="14"
                              Style="{StaticResource MenuButtonTheme}"/>
+
+                <RadioButton Content="Button#2"
+                             Height="50"
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins"
+                             FontSize="14"
+                             Style="{StaticResource MenuButtonTheme}"/> 
+
+                <RadioButton Content="Exit"
+                             Height="50"
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins"
+                             FontSize="14"
+                             Style="{StaticResource MenuButtonTheme}" Checked="RadioButton_Checked"/>
             </StackPanel>
         </Grid>
 

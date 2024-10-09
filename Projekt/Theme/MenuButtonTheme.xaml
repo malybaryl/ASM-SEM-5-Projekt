@@ -9,8 +9,9 @@
                     <Grid VerticalAlignment="Stretch"
                           HorizontalAlignment="Stretch"
                           Background="{TemplateBinding Background}">
-                        <TextBlock Text="Hello"
-                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{TemplateBinding Property=Content}"
+                                   VerticalAlignment="Center"
+                                   Margin="50,0,0,0"/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
