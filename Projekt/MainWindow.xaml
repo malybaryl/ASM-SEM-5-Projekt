@@ -34,20 +34,39 @@
            />
 
             <StackPanel Grid.Row="1">
+
+                <TextBlock Text="Moduł:"
+                           Foreground="White"
+                           FontFamily="/Fonts/#Poppins"
+                           FontSize="14"
+                           Width="180"/>
                 
-                <RadioButton Content="Button#1"
+                <RadioButton Content="ASM"
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins/"
+                             FontSize="14"
+                             Width="180"/>
+                
+                <RadioButton Content="C#"
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins/"
+                             FontSize="14"
+                             Width="180"/>
+
+                <TextBlock Text="Ilość wątków:"
+                           Foreground="White"
+                           FontFamily="/Fonts/#Poppins"
+                           FontSize="14"
+                           Width="180"/>
+
+                <Slider Width="180"/>
+
+                <RadioButton Content="Run"
                              Height="50"
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
                              Style="{StaticResource MenuButtonTheme}"/>
-
-                <RadioButton Content="Button#2"
-                             Height="50"
-                             Foreground="White"
-                             FontFamily="/Fonts/#Poppins"
-                             FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}"/> 
 
                 <RadioButton Content="Exit"
                              Height="50"
@@ -55,6 +74,14 @@
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
                              Style="{StaticResource MenuButtonTheme}" Checked="RadioButton_Checked"/>
+
+                <TextBlock Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Elektrotechnika, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
+                           Foreground="White"
+                           FontFamily="/Fonts/#Poppins"
+                           FontSize="8" 
+                           TextWrapping="Wrap"
+                           TextAlignment="Justify"
+                           Width="180"/>
             </StackPanel>
         </Grid>
 
