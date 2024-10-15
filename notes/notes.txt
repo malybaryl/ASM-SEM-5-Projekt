@@ -1,0 +1,267 @@
+Repozytorium na Github: https://github.com/malybaryl/ASM-SEM-5-Projekt
+
+Temat 1: Symulowanie Daltonizmu (Deuteranopia)
+
+Opis: Symulowanie daltonizmu typu Deuteranopia polega na przekształceniu kolorów
+obrazu, aby naśladowały widzenie osób z tym typem ślepoty barw. Daltoniści z 
+deuteranopią mają trudności z rozróżnianiem zielonych i czerwonych kolorów, więc 
+ich percepcja obrazu zmienia się w sposób charakterystyczny.
+
+Przykładowy kod asm:
+
+section .text
+global simulate_deuteranopia
+
+simulate_deuteranopia:
+    ; RDI - wskaźnik do danych obrazu
+    ; RSI - szerokość obrazu
+    ; RDX - wysokość obrazu
+    
+    push rbx
+    mov r8, rdi         ; wskaźnik do danych obrazu
+    mov r9, rsi         ; szerokość
+    mov r10, rdx        ; wysokość
+
+    xor rax, rax        ; x (kolumna)
+    xor rbx, rbx        ; y (wiersz)
+
+daltonism_loop_y:
+    cmp rbx, r10        ; y >= height?
+    jge daltonism_done  ; Koniec, jeśli tak
+    xor rax, rax        ; resetuj x do 0
+
+daltonism_loop_x:
+    cmp rax, r9         ; x >= width?
+    jge next_row_daltonism
+
+    ; Oblicz pozycję w pamięci piksela (row major order)
+    mov rdi, rbx
+    imul rdi, r9
+    add rdi, rax
+    imul rdi, 3         ; Przesunięcie dla RGB (3 bajty na piksel)
+    add rdi, r8
+
+    ; Wczytaj kolory piksela
+    movzx r10b, byte [rdi]     ; R
+    movzx r11b, byte [rdi + 1] ; G
+    movzx r12b, byte [rdi + 2] ; B
+
+    ; Konwersja kolorów na symulację daltonizmu (Deuteranopia)
+    ; Zmodyfikuj wartości R, G, B, aby zredukować rozróżnialność kolorów czerwonego i zielonego
+    ; Model deuteranopii redukuje zielone i czerwone tony
+    mov r13, r10
+    add r13, r11
+    shr r13, 1          ; Uśrednij wartości R i G
+
+    ; Zapisz przekształcone kolory (Redukcja intensywności zieleni i czerwieni)
+    mov byte [rdi], r13      ; R (zmniejszona intensywność czerwieni)
+    mov byte [rdi + 1], r13  ; G (zmniejszona intensywność zieleni)
+    mov byte [rdi + 2], r12b ; B (niezmienione niebieskie)
+
+    inc rax
+    jmp daltonism_loop_x
+
+next_row_daltonism:
+    inc rbx
+    jmp daltonism_loop_y
+
+daltonism_done:
+    pop rbx
+    ret
+
+Przykładowy kod c#:
+
+using System;
+using System.Drawing;
+using System.Threading.Tasks;
+
+class DeuteranopiaSimulator
+{
+    public static Bitmap SimulateDeuteranopia(Bitmap original)
+    {
+        int width = original.Width;
+        int height = original.Height;
+        Bitmap simulatedImage = new Bitmap(width, height);
+
+        // Ustal liczbe watkow, domyslnie tyle ile procesorów
+        int threads = Environment.ProcessorCount;
+        int partitionSize = height / threads;
+
+        Parallel.For(0, threads, threadIndex =>
+        {
+            int start = threadIndex * partitionSize;
+            int end = (threadIndex == threads - 1) ? height : start + partitionSize;
+
+            for (int y = start; y < end; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Color pixelColor = original.GetPixel(x, y);
+
+                    // Symulowanie deuteranopii poprzez zmniejszenie zielonego kanału i skorygowanie RGB
+                    int newR = (int)(pixelColor.R * 0.625 + pixelColor.G * 0.375);
+                    int newG = (int)(pixelColor.G * 0.7);  // Zielony stłumiony
+                    int newB = (int)(pixelColor.B * 0.8);
+
+                    newR = Math.Clamp(newR, 0, 255);
+                    newG = Math.Clamp(newG, 0, 255);
+                    newB = Math.Clamp(newB, 0, 255);
+
+                    Color deuteranopiaColor = Color.FromArgb(newR, newG, newB);
+                    simulatedImage.SetPixel(x, y, deuteranopiaColor);
+                }
+            }
+        });
+
+        return simulatedImage;
+    }
+
+    static void Main()
+    {
+        Bitmap original = new Bitmap("input_image.jpg"); // załaduj obraz wejściowy
+        Bitmap simulated = SimulateDeuteranopia(original);
+        simulated.Save("output_deuteranopia.jpg"); // zapisuje przetworzony obraz
+        Console.WriteLine("Symulacja deuteranopii zakończona.");
+    }
+}
+
+notatki do kodu c#:
+
+- Kod wykorzystuje wielowątkowość, aby podzielić pracę na wiele wątków.
+
+- Deuteranopia jest symulowana poprzez zmianę wartości kolorów RGB, gdzie kanał 
+zielony (G) jest zmniejszany, a reszta jest skorygowana, aby oddać wpływ na inne barwy.
+
+- Funkcja SimulateDeuteranopia przyjmuje obraz wejściowy i zwraca obraz przetworzony pod 
+kątem widzenia przez osobę z deuteranopią.
+
+
+Temat 2: Konwersja obrazu do skali szarości (Grayscale)
+
+Opis: Konwersja obrazu do skali szarości polega na przekształceniu wartości 
+kolorowych pikseli (RGB) w pojedynczą wartość jasności. Ta wartość odpowiada 
+poziomowi szarości, który można wyliczyć, stosując odpowiednie współczynniki 
+dla kanałów czerwonego, zielonego i niebieskiego.
+
+Przykładowy kod asm:
+
+section .text
+global convert_to_grayscale
+
+convert_to_grayscale:
+    ; RDI - wskaźnik do danych obrazu
+    ; RSI - szerokość obrazu
+    ; RDX - wysokość obrazu
+    
+    push rbx
+    mov r8, rdi         ; wskaźnik do danych obrazu
+    mov r9, rsi         ; szerokość
+    mov r10, rdx        ; wysokość
+
+    xor rax, rax        ; x (kolumna)
+    xor rbx, rbx        ; y (wiersz)
+
+grayscale_loop_y:
+    cmp rbx, r10        ; y >= height?
+    jge grayscale_done  ; Koniec, jeśli tak
+    xor rax, rax        ; resetuj x do 0
+
+grayscale_loop_x:
+    cmp rax, r9         ; x >= width?
+    jge next_row_grayscale
+
+    ; Oblicz pozycję w pamięci piksela (row major order)
+    mov rdi, rbx
+    imul rdi, r9
+    add rdi, rax
+    imul rdi, 3         ; Przesunięcie dla RGB (3 bajty na piksel)
+    add rdi, r8
+
+    ; Wczytaj kolory piksela
+    movzx r10b, byte [rdi]     ; R
+    movzx r11b, byte [rdi + 1] ; G
+    movzx r12b, byte [rdi + 2] ; B
+
+    ; Konwersja do skali szarości (wzór: 0.299 * R + 0.587 * G + 0.114 * B)
+    mov r13, r10
+    imul r13, 299
+    mov r14, r11
+    imul r14, 587
+    mov r15, r12
+    imul r15, 114
+
+    add r13, r14
+    add r13, r15
+    shr r13, 10          ; Dzielenie przez 1024, aby uzyskać końcową wartość
+
+    ; Zapisz wartość szarości do wszystkich kanałów (R, G, B)
+    mov byte [rdi], r13b      ; R
+    mov byte [rdi + 1], r13b  ; G
+    mov byte [rdi + 2], r13b  ; B
+
+    inc rax
+    jmp grayscale_loop_x
+
+next_row_grayscale:
+    inc rbx
+    jmp grayscale_loop_y
+
+grayscale_done:
+    pop rbx
+    ret
+
+Przykładowy kod c#:
+
+using System;
+using System.Drawing;
+using System.Threading.Tasks;
+
+class GrayscaleConverter
+{
+    public static Bitmap ConvertToGrayscale(Bitmap original)
+    {
+        int width = original.Width;
+        int height = original.Height;
+        Bitmap grayscaleImage = new Bitmap(width, height);
+
+        int numThreads = Environment.ProcessorCount;  // Użycie liczby procesorów
+        Parallel.For(0, numThreads, threadId =>
+        {
+            int rowStart = (height / numThreads) * threadId;
+            int rowEnd = (threadId == numThreads - 1) ? height : rowStart + (height / numThreads);
+
+            for (int y = rowStart; y < rowEnd; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Color originalColor = original.GetPixel(x, y);
+                    int gray = (int)(0.299 * originalColor.R + 0.587 * originalColor.G + 0.114 * originalColor.B);
+                    Color grayColor = Color.FromArgb(gray, gray, gray);
+                    grayscaleImage.SetPixel(x, y, grayColor);
+                }
+            }
+        });
+
+        return grayscaleImage;
+    }
+
+    static void Main(string[] args)
+    {
+        Bitmap original = (Bitmap)Image.FromFile("input_image.jpg");  // Wczytaj obraz
+        Bitmap grayscale = ConvertToGrayscale(original);
+        grayscale.Save("grayscale_output.jpg");  // Zapisz wynikowy obraz
+        Console.WriteLine("Konwersja do skali szarości zakończona.");
+    }
+}
+
+notatki do kodu c#:
+
+- Parallel.For: Ten mechanizm pozwala uruchomić pętle równocześnie w wielu wątkach. 
+Podzieliliśmy wysokość obrazu na sekcje przypisywane różnym wątkom.
+
+- Liczba wątków: Ustawiona na liczbę procesorów dostępnych na maszynie 
+(Environment.ProcessorCount), co sprawia, że liczba wątków dostosowuje się do mocy 
+obliczeniowej systemu.
+
+- Wzór na szarość: Zastosowany jest klasyczny wzór na luminancję: 
+0.299 * R + 0.587 * G + 0.114 * B.
