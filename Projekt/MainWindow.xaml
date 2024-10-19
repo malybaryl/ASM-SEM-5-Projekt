@@ -10,6 +10,8 @@
         ResizeMode="NoResize"
         Background="Transparent"
         AllowsTransparency="True"
+        Loaded="Window_Loaded"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
         >
     <Border Background="#272537"
             CornerRadius="20"
@@ -25,7 +27,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="Project Logo"
+            <TextBlock Text="DEUTERANOPIA"
            VerticalAlignment="Center"
            HorizontalAlignment="Center"
            Foreground="White"
@@ -33,58 +35,80 @@
            FontSize="22"
            />
 
-            <StackPanel Grid.Row="1">
+            <!-- Lewy panel z opcjami -->
+            <StackPanel Grid.Row="1" Margin="10,20,10,10" VerticalAlignment="Top">
 
+                <!-- Moduł -->
                 <TextBlock Text="Moduł:"
                            Foreground="White"
                            FontFamily="/Fonts/#Poppins"
                            FontSize="14"
-                           Width="180"/>
-                
+                           Width="180"
+                           Margin="0,0,0,10"/>
+
                 <RadioButton Content="ASM"
                              Foreground="White"
-                             FontFamily="/Fonts/#Poppins/"
+                             FontFamily="/Fonts/#Poppins"
                              FontSize="14"
-                             Width="180"/>
-                
+                             Width="180"
+                             IsChecked="True"
+                             Margin="0,0,0,10"/>
+
                 <RadioButton Content="C#"
                              Foreground="White"
-                             FontFamily="/Fonts/#Poppins/"
+                             FontFamily="/Fonts/#Poppins"
                              FontSize="14"
-                             Width="180"/>
+                             Width="180"
+                             Margin="0,0,0,10"/>
 
-                <TextBlock Text="Ilość wątków:"
-                           Foreground="White"
-                           FontFamily="/Fonts/#Poppins"
-                           FontSize="14"
-                           Width="180"/>
+                <!-- Ilość wątków -->
+                <TextBlock Name="threadCount"
+                   Foreground="White"
+                   FontFamily="/Fonts/#Poppins"
+                   FontSize="14"
+                   Width="180"
+                   Margin="0,5,0,20"/>
 
-                <Slider Width="180"/>
+                <Slider Name="threadSlider"
+                        Width="180"
+                        Minimum="1"
+                        Maximum="200"
+                        TickFrequency="1"
+                        ValueChanged="Slider_ValueChanged"/>
 
+                
+
+                <!-- Opcje -->
                 <RadioButton Content="Run"
                              Height="50"
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}"/>
+                             Style="{StaticResource MenuButtonTheme}"
+                             Margin="0,0,0,10"/>
 
                 <RadioButton Content="Exit"
                              Height="50"
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}" Checked="RadioButton_Checked"/>
+                             Style="{StaticResource MenuButtonTheme}" 
+                             Checked="RadioButton_Checked"/>
 
-                <TextBlock Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Elektrotechnika, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
-                           Foreground="White"
-                           FontFamily="/Fonts/#Poppins"
-                           FontSize="8" 
-                           TextWrapping="Wrap"
-                           TextAlignment="Justify"
-                           Width="180"/>
             </StackPanel>
-        </Grid>
 
-        
+            <!-- Informacja o projekcie -->
+            <TextBlock Grid.Row="1"
+               Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Elektrotechnika, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
+               Foreground="White"
+               FontFamily="/Fonts/#Poppins"
+               FontSize="8" 
+               TextWrapping="Wrap"
+               TextAlignment="Justify"
+               Width="180"
+               Height="90"
+               VerticalAlignment="Bottom"
+               Margin="10"/>
+        </Grid>
     </Border>
 </Window>
