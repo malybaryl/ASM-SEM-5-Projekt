@@ -46,7 +46,8 @@
                            Width="180"
                            Margin="0,0,0,10"/>
 
-                <RadioButton Content="ASM"
+                <RadioButton Name="asmRadioButton" 
+                             Content="ASM"
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
