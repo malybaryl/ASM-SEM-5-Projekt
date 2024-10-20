@@ -72,7 +72,7 @@ namespace Projekt
             if (threadCount != null)
             {
                 int threadValue = (int)threadSlider.Value;
-                threadCount.Text = $"Wybrane wątki: {threadValue}";
+                threadCount.Text = $"Ilość wątków: {threadValue}";
             }
         }
 

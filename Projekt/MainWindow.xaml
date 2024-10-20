@@ -51,7 +51,7 @@
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
-                             Width="180"
+                             Width="150"
                              IsChecked="True"
                              Margin="0,0,0,10"/>
 
@@ -59,7 +59,7 @@
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
-                             Width="180"
+                             Width="150"
                              Margin="0,0,0,10"/>
 
                 <!-- Ilość wątków -->
@@ -71,30 +71,71 @@
                    Margin="0,5,0,20"/>
 
                 <Slider Name="threadSlider"
-                        Width="180"
+                        Width="160"
                         Minimum="1"
                         Maximum="200"
                         TickFrequency="1"
                         ValueChanged="Slider_ValueChanged"/>
 
-                
 
+
+                <TextBlock Text="Działania:"
+           Foreground="White"
+           FontFamily="/Fonts/#Poppins"
+           FontSize="14"
+           Width="180"
+           Margin="0,20,0,0"/>
                 <!-- Opcje -->
-                <RadioButton Content="Run"
-                             Height="50"
+                <RadioButton Content="Wybierz obraz" 
+                             Click="ChooseImage_Click" 
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
                              Style="{StaticResource MenuButtonTheme}"
-                             Margin="0,0,0,10"/>
+                             Width="180"
+                             Margin="-35,20,0,10"/>
 
-                <RadioButton Content="Exit"
+                <!-- Przetwarzanie obrazu -->
+                <RadioButton Content="Przetwórz obraz" 
+                             Click="ProcessImage_Click" 
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins"
+                             FontSize="14"
+                             Style="{StaticResource MenuButtonTheme}"
+                             Width="182"
+                             Margin="-35,0,0,10"/>
+                             
+
+                <!-- Zapisanie obrazu -->
+                <RadioButton Content="Zapisz obraz" 
+                             Click="SaveImage_Click" 
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins"
+                             FontSize="14"
+                             Style="{StaticResource MenuButtonTheme}"
+                             Width="181"
+                             Margin="-35,0,0,10"/>
+
+                <!-- Debugowanie -->
+                <RadioButton Content="Debuguj" 
+                             Click="SaveImage_Click" 
+                             Foreground="White"
+                             FontFamily="/Fonts/#Poppins"
+                             FontSize="14"
+                             Style="{StaticResource MenuButtonTheme}"
+                             Width="182"
+                             Margin="-35,10,0,10"/>
+
+                <!-- Wyjście -->
+                <RadioButton Content="Wyjdź"
                              Height="50"
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
                              Style="{StaticResource MenuButtonTheme}" 
-                             Checked="RadioButton_Checked"/>
+                             Checked="RadioButton_Checked" 
+                             Width="182"
+                             Margin="-35,0,0,0"/>
 
             </StackPanel>
 
@@ -108,13 +149,8 @@
                Margin="0,0,0,10"/>
 
                 <TextBox Name="imagePathTextBox" Width="300" IsReadOnly="True" Margin="0,0,10,10"/>
-                <Button Content="Wybierz obraz" Click="ChooseImage_Click" Width="100" Margin="0,0,0,10"/>
-
-                <!-- Przetwarzanie obrazu -->
-                <Button Content="Przetwórz obraz" Click="ProcessImage_Click" Width="150" Margin="0,0,0,10"/>
-
-                <!-- Zapisanie obrazu -->
-                <Button Content="Zapisz obraz" Click="SaveImage_Click" Width="150" Margin="0,0,0,10"/>
+                
+                
             </StackPanel>
 
             <!-- Informacja o projekcie -->
