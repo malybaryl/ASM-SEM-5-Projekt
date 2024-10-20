@@ -5,7 +5,7 @@
            x:Key="MenuButtonTheme">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type RadioButton}">
+                <ControlTemplate TargetType="{x:Type Button}">
                     <Grid VerticalAlignment="Stretch"
                           HorizontalAlignment="Stretch"
                           Background="{TemplateBinding Background}">

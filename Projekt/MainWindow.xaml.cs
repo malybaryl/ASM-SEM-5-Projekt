@@ -9,23 +9,20 @@ using System.Windows.Media;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-
-
-
 namespace Projekt
 {
     public partial class MainWindow : Window
     {
-        //[DllImport("deuteranopia.dll", CallingConvention = CallingConvention.Cdecl)]
-        //public static extern void SimulateDeuteranopiaASM(IntPtr originalImage, IntPtr processedImage, int pixelCount, int threadCount);
+        // Importowanie funkcji z DLL ASM (użyjemy poprawnej ścieżki i architektury)
+        [DllImport("deuteranopia.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void deuteranopiaAsm(IntPtr originalImage, IntPtr processedImage, int pixelCount, int threadCount);
+
         private Bitmap _originalImage;
         private Bitmap _processedImage;
+
         public MainWindow()
         {
-             
-
-        InitializeComponent();
-
+            InitializeComponent();
             // Pobranie liczby wątków procesora i ustawienie wartości początkowej slidera
             int processorThreads = Environment.ProcessorCount;
             threadSlider.Value = processorThreads; // Ustawiamy wartość slidera na liczbę wątków procesora
@@ -33,7 +30,7 @@ namespace Projekt
         }
 
         // Zamykanie aplikacji przy wybraniu opcji Exit
-        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
         }
@@ -51,15 +48,12 @@ namespace Projekt
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.WindowStartupLocation = WindowStartupLocation.Manual;
-
             // Rozmiary ekranu
             var screenWidth = SystemParameters.PrimaryScreenWidth;
             var screenHeight = SystemParameters.PrimaryScreenHeight;
-
             // Centrowanie okna
             this.Left = (screenWidth - this.Width) / 2;
             this.Top = (screenHeight - this.Height) / 2;
-
             // Zainicjuj liczbę wątków po wczytaniu okna
             int processorThreads = Environment.ProcessorCount;
             threadSlider.Value = processorThreads; // Ustaw wartość slidera
@@ -84,7 +78,6 @@ namespace Projekt
                 Filter = "Image files (*.jpg)|*.jpg",
                 Title = "Wybierz obraz"
             };
-
             if (openFileDialog.ShowDialog() == true)
             {
                 imagePathTextBox.Text = openFileDialog.FileName;
@@ -105,25 +98,24 @@ namespace Projekt
             // Pobranie liczby wątków z suwaka
             int threadCount = (int)threadSlider.Value;
 
+            _processedImage = new Bitmap(_originalImage.Width, _originalImage.Height);
+
             if (asmRadioButton.IsChecked == true) // Radiobutton ASM
             {
-                
-
                 IntPtr originalPtr = _originalImage.GetHbitmap(); // Pobierz wskaźnik do oryginalnego obrazu
                 IntPtr processedPtr = _processedImage.GetHbitmap(); // Pobierz wskaźnik do przetworzonego obrazu
                 int pixelCount = _originalImage.Width * _originalImage.Height;
 
                 // Wywołanie funkcji ASM
-                //SimulateDeuteranopiaASM(originalPtr, processedPtr, pixelCount, threadCount);
+                deuteranopiaAsm(originalPtr, processedPtr, pixelCount, threadCount);
                 MessageBox.Show("Obraz przetworzony w ASM.");
             }
-            else // Radiobutton C#
+            else if (cSharpRadioButton.IsChecked == true)
             {
-                // Symulacja deuteranopii w c#
+                // Symulacja deuteranopii w C#
                 _processedImage = SimulateDeuteranopia(_originalImage, threadCount);
-                MessageBox.Show("Obraz przetworzony.");
+                MessageBox.Show("Obraz przetworzony w C#.");
             }
-            
         }
 
         // Zapis przetworzonego obrazu
@@ -140,7 +132,6 @@ namespace Projekt
                 Filter = "Image files (*.jpg, *.png)|*.jpg;*.png",
                 Title = "Zapisz obraz"
             };
-
             if (saveFileDialog.ShowDialog() == true)
             {
                 _processedImage.Save(saveFileDialog.FileName);
@@ -153,7 +144,7 @@ namespace Projekt
             if (value < min) return min;
             if (value > max) return max;
             return value;
-        }
+                }
 
         // Funkcja symulacji deuteranopii
         public static Bitmap SimulateDeuteranopia(Bitmap original, int threads)

@@ -11,11 +11,29 @@
         Background="Transparent"
         AllowsTransparency="True"
         Loaded="Window_Loaded"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
-        >
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <!-- Definicja stylu dla przycisków bez obramowania i bez efektu hover -->
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Border Background="#272537"
-            CornerRadius="20"
-            >
+            CornerRadius="20">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"/>
@@ -28,12 +46,11 @@
             </Grid.RowDefinitions>
 
             <TextBlock Text="DEUTERANOPIA"
-           VerticalAlignment="Center"
-           HorizontalAlignment="Center"
-           Foreground="White"
-           FontFamily="/Fonts/#Poppins"
-           FontSize="22"
-           />
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Foreground="White"
+                       FontFamily="/Fonts/#Poppins"
+                       FontSize="22"/>
 
             <!-- Lewy panel z opcjami -->
             <StackPanel Grid.Row="1" Margin="10,20,10,10" VerticalAlignment="Top">
@@ -55,7 +72,8 @@
                              IsChecked="True"
                              Margin="0,0,0,10"/>
 
-                <RadioButton Content="C#"
+                <RadioButton Name="cSharpRadioButton"
+                             Content="C#"
                              Foreground="White"
                              FontFamily="/Fonts/#Poppins"
                              FontSize="14"
@@ -64,11 +82,11 @@
 
                 <!-- Ilość wątków -->
                 <TextBlock Name="threadCount"
-                   Foreground="White"
-                   FontFamily="/Fonts/#Poppins"
-                   FontSize="14"
-                   Width="180"
-                   Margin="0,5,0,20"/>
+                           Foreground="White"
+                           FontFamily="/Fonts/#Poppins"
+                           FontSize="14"
+                           Width="180"
+                           Margin="0,5,0,20"/>
 
                 <Slider Name="threadSlider"
                         Width="160"
@@ -77,94 +95,80 @@
                         TickFrequency="1"
                         ValueChanged="Slider_ValueChanged"/>
 
-
-
                 <TextBlock Text="Działania:"
-           Foreground="White"
-           FontFamily="/Fonts/#Poppins"
-           FontSize="14"
-           Width="180"
-           Margin="0,20,0,0"/>
+                           Foreground="White"
+                           FontFamily="/Fonts/#Poppins"
+                           FontSize="14"
+                           Width="180"
+                           Margin="0,20,0,0"/>
+
                 <!-- Opcje -->
-                <RadioButton Content="Wybierz obraz" 
-                             Click="ChooseImage_Click" 
-                             Foreground="White"
-                             FontFamily="/Fonts/#Poppins"
-                             FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}"
-                             Width="180"
-                             Margin="-35,20,0,10"/>
+                <Button Content="Wybierz obraz" 
+                        Click="ChooseImage_Click" 
+                        FontFamily="/Fonts/#Poppins"
+                        FontSize="14"
+                        Width="166"
+                        Margin="-45,20,0,10"/>
 
                 <!-- Przetwarzanie obrazu -->
-                <RadioButton Content="Przetwórz obraz" 
-                             Click="ProcessImage_Click" 
-                             Foreground="White"
-                             FontFamily="/Fonts/#Poppins"
-                             FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}"
-                             Width="182"
-                             Margin="-35,0,0,10"/>
-                             
+                <Button Content="Przetwórz obraz" 
+                        Click="ProcessImage_Click" 
+                        FontFamily="/Fonts/#Poppins"
+                        FontSize="14"
+                        Width="182"
+                        Margin="-34,0,0,10"/>
 
                 <!-- Zapisanie obrazu -->
-                <RadioButton Content="Zapisz obraz" 
-                             Click="SaveImage_Click" 
-                             Foreground="White"
-                             FontFamily="/Fonts/#Poppins"
-                             FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}"
-                             Width="181"
-                             Margin="-35,0,0,10"/>
+                <Button Content="Zapisz obraz" 
+                        Click="SaveImage_Click" 
+                        FontFamily="/Fonts/#Poppins"
+                        FontSize="14"
+                        Width="181"
+                        Margin="-55,0,0,10"/>
 
                 <!-- Debugowanie -->
-                <RadioButton Content="Debuguj" 
-                             Click="SaveImage_Click" 
-                             Foreground="White"
-                             FontFamily="/Fonts/#Poppins"
-                             FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}"
-                             Width="182"
-                             Margin="-35,10,0,10"/>
+                <Button Content="Debuguj" 
+                        Click="SaveImage_Click" 
+                        FontFamily="/Fonts/#Poppins"
+                        FontSize="14"
+                        Width="182"
+                        Margin="-84,10,0,10"/>
 
                 <!-- Wyjście -->
-                <RadioButton Content="Wyjdź"
-                             Height="50"
-                             Foreground="White"
-                             FontFamily="/Fonts/#Poppins"
-                             FontSize="14"
-                             Style="{StaticResource MenuButtonTheme}" 
-                             Checked="RadioButton_Checked" 
-                             Width="182"
-                             Margin="-35,0,0,0"/>
-
+                <Button Content="Wyjdź"
+                        Height="50"
+                        FontFamily="/Fonts/#Poppins"
+                        FontSize="14"
+                        Click="Exit_Click"
+                        Width="182"
+                        Margin="-100,0,0,0"/>
             </StackPanel>
 
             <!-- Wybór pliku i opcje przetwarzania dla modułu C# -->
             <StackPanel Grid.Row="1" Grid.Column="1" Margin="20" VerticalAlignment="Top">
-                <!-- Wybór obrazu -->
+                <!-- Wybierz obraz -->
                 <TextBlock Text="Wybierz obraz:"
-               Foreground="White"
-               FontFamily="/Fonts/#Poppins"
-               FontSize="14"
-               Margin="0,0,0,10"/>
+                           Foreground="White"
+                           FontFamily="/Fonts/#Poppins"
+                           FontSize="14"
+                           Margin="0,0,0,10"/>
 
                 <TextBox Name="imagePathTextBox" Width="300" IsReadOnly="True" Margin="0,0,10,10"/>
-                
-                
+
             </StackPanel>
 
             <!-- Informacja o projekcie -->
             <TextBlock Grid.Row="1"
-               Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Elektrotechnika, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
-               Foreground="White"
-               FontFamily="/Fonts/#Poppins"
-               FontSize="8" 
-               TextWrapping="Wrap"
-               TextAlignment="Justify"
-               Width="180"
-               Height="90"
-               VerticalAlignment="Bottom"
-               Margin="10"/>
+                       Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Elektrotechnika, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
+                       Foreground="White"
+                       FontFamily="/Fonts/#Poppins"
+                       FontSize="8" 
+                       TextWrapping="Wrap"
+                       TextAlignment="Justify"
+                       Width="180"
+                       Height="90"
+                       VerticalAlignment="Bottom"
+                       Margin="10"/>
         </Grid>
     </Border>
 </Window>
