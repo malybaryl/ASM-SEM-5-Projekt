@@ -14,14 +14,18 @@ namespace Projekt
     public partial class MainWindow : Window
     {
         // Importowanie funkcji z DLL ASM (użyjemy poprawnej ścieżki i architektury)
-        [DllImport("deuteranopia.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void deuteranopiaAsm(IntPtr originalImage, IntPtr processedImage, int pixelCount, int threadCount);
+        [DllImport(@"C:\Users\kacpe\Desktop\home\Programing\studia\ASM-SEM-5\Projekt\x64\Debug\ModuleAsm.dll")]
+        public static extern void DeuteranopiaAsm(IntPtr originalImage, IntPtr processedImage, int pixelCount, int threadCount);
+        
+        //static extern int MyProc1(int a, int b);
 
         private Bitmap _originalImage;
         private Bitmap _processedImage;
 
         public MainWindow()
         {
+   
+
             InitializeComponent();
             // Pobranie liczby wątków procesora i ustawienie wartości początkowej slidera
             int processorThreads = Environment.ProcessorCount;
@@ -107,7 +111,7 @@ namespace Projekt
                 int pixelCount = _originalImage.Width * _originalImage.Height;
 
                 // Wywołanie funkcji ASM
-                deuteranopiaAsm(originalPtr, processedPtr, pixelCount, threadCount);
+                DeuteranopiaAsm(originalPtr, processedPtr, pixelCount, threadCount);
                 MessageBox.Show("Obraz przetworzony w ASM.");
             }
             else if (cSharpRadioButton.IsChecked == true)
