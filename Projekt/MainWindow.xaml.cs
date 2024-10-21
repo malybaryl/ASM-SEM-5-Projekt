@@ -3,43 +3,34 @@ using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
 using System.Drawing;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Media;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Projekt
 {
     public partial class MainWindow : Window
     {
-        // Importowanie funkcji z DLL ASM (użyjemy poprawnej ścieżki i architektury)
+        // Importing the ASM function (updated with correct path)
         [DllImport(@"C:\Users\kacpe\Desktop\home\Programing\studia\ASM-SEM-5\Projekt\x64\Debug\ModuleAsm.dll")]
-        public static extern void DeuteranopiaAsm(IntPtr originalImage, IntPtr processedImage, int pixelCount, int threadCount);
-        
-        //static extern int MyProc1(int a, int b);
+        public static extern void DeuteranopiaAsm(IntPtr originalImage, IntPtr processedImage, int pixelCount, int stride, int threadCount);
 
         private Bitmap _originalImage;
         private Bitmap _processedImage;
 
         public MainWindow()
         {
-   
-
             InitializeComponent();
-            // Pobranie liczby wątków procesora i ustawienie wartości początkowej slidera
             int processorThreads = Environment.ProcessorCount;
-            threadSlider.Value = processorThreads; // Ustawiamy wartość slidera na liczbę wątków procesora
-            threadCount.Text = $"Wybrane wątki: {processorThreads}"; // Wyświetlamy wartość początkową wątku
+            threadSlider.Value = processorThreads;
+            threadCount.Text = $"Wybrane wątki: {processorThreads}";
         }
 
-        // Zamykanie aplikacji przy wybraniu opcji Exit
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
         }
 
-        // Przeciąganie okna
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ButtonState == MouseButtonState.Pressed)
@@ -48,23 +39,15 @@ namespace Projekt
             }
         }
 
-        // Wyśrodkowanie okna przy starcie
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.WindowStartupLocation = WindowStartupLocation.Manual;
-            // Rozmiary ekranu
             var screenWidth = SystemParameters.PrimaryScreenWidth;
             var screenHeight = SystemParameters.PrimaryScreenHeight;
-            // Centrowanie okna
             this.Left = (screenWidth - this.Width) / 2;
             this.Top = (screenHeight - this.Height) / 2;
-            // Zainicjuj liczbę wątków po wczytaniu okna
-            int processorThreads = Environment.ProcessorCount;
-            threadSlider.Value = processorThreads; // Ustaw wartość slidera
-            threadCount.Text = $"Ilość wątków: {processorThreads}"; // Zaktualizuj wyświetlanie
         }
 
-        // Obsługa zmiany wartości slidera
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (threadCount != null)
@@ -74,14 +57,14 @@ namespace Projekt
             }
         }
 
-        // Wybór obrazu
         private void ChooseImage_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                Filter = "Image files (*.jpg)|*.jpg",
+                Filter = "Image files (*.jpg, *.png)|*.jpg;*.png",
                 Title = "Wybierz obraz"
             };
+
             if (openFileDialog.ShowDialog() == true)
             {
                 imagePathTextBox.Text = openFileDialog.FileName;
@@ -90,7 +73,6 @@ namespace Projekt
             }
         }
 
-        // Przetwarzanie obrazu na deuteranopię
         private void ProcessImage_Click(object sender, RoutedEventArgs e)
         {
             if (_originalImage == null)
@@ -99,30 +81,43 @@ namespace Projekt
                 return;
             }
 
-            // Pobranie liczby wątków z suwaka
             int threadCount = (int)threadSlider.Value;
 
             _processedImage = new Bitmap(_originalImage.Width, _originalImage.Height);
 
-            if (asmRadioButton.IsChecked == true) // Radiobutton ASM
+            if (asmRadioButton.IsChecked == true)
             {
-                IntPtr originalPtr = _originalImage.GetHbitmap(); // Pobierz wskaźnik do oryginalnego obrazu
-                IntPtr processedPtr = _processedImage.GetHbitmap(); // Pobierz wskaźnik do przetworzonego obrazu
+    
+                Rectangle rect = new Rectangle(0, 0, _originalImage.Width, _originalImage.Height);
+                BitmapData originalData = _originalImage.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+                BitmapData processedData = _processedImage.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+                
                 int pixelCount = _originalImage.Width * _originalImage.Height;
+                int stride = originalData.Stride;
 
-                // Wywołanie funkcji ASM
-                DeuteranopiaAsm(originalPtr, processedPtr, pixelCount, threadCount);
+
+                IntPtr originalPtr = originalData.Scan0;
+                IntPtr processedPtr = processedData.Scan0;
+
+                Console.WriteLine($"Original Image Pointer: {originalPtr}");
+                Console.WriteLine($"Processed Image Pointer: {processedPtr}");
+                Console.WriteLine($"Pixel Count: {pixelCount}");
+                Console.WriteLine($"Stride: {stride}");
+
+                DeuteranopiaAsm(originalPtr, processedPtr, pixelCount, stride, threadCount);
+
+                _originalImage.UnlockBits(originalData);
+                _processedImage.UnlockBits(processedData);
+
                 MessageBox.Show("Obraz przetworzony w ASM.");
             }
             else if (cSharpRadioButton.IsChecked == true)
             {
-                // Symulacja deuteranopii w C#
                 _processedImage = SimulateDeuteranopia(_originalImage, threadCount);
                 MessageBox.Show("Obraz przetworzony w C#.");
             }
         }
 
-        // Zapis przetworzonego obrazu
         private void SaveImage_Click(object sender, RoutedEventArgs e)
         {
             if (_processedImage == null)
@@ -136,6 +131,7 @@ namespace Projekt
                 Filter = "Image files (*.jpg, *.png)|*.jpg;*.png",
                 Title = "Zapisz obraz"
             };
+
             if (saveFileDialog.ShowDialog() == true)
             {
                 _processedImage.Save(saveFileDialog.FileName);
@@ -143,21 +139,12 @@ namespace Projekt
             }
         }
 
-        public static int Clamp(int value, int min, int max)
-        {
-            if (value < min) return min;
-            if (value > max) return max;
-            return value;
-                }
-
-        // Funkcja symulacji deuteranopii
         public static Bitmap SimulateDeuteranopia(Bitmap original, int threads)
         {
             int width = original.Width;
             int height = original.Height;
             Bitmap simulatedImage = new Bitmap(width, height, original.PixelFormat);
 
-            // Blokowanie obszaru w pamięci
             Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);
             BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
             BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
@@ -170,10 +157,9 @@ namespace Projekt
             byte[] originalPixels = new byte[stride * height];
             byte[] simulatedPixels = new byte[stride * height];
 
-            // Kopiowanie danych oryginalnego obrazu do tablicy bajtów
-            System.Runtime.InteropServices.Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);
 
-            // Parallel.For dla wielowątkowego przetwarzania obrazu
+            Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);
+
             Parallel.For(0, threads, threadIndex =>
             {
                 int partitionSize = height / threads;
@@ -186,21 +172,18 @@ namespace Projekt
                     {
                         int pixelIndex = y * stride + x * bytesPerPixel;
 
-                        // Pobieranie wartości R, G, B z oryginalnego obrazu
                         byte originalB = originalPixels[pixelIndex];
                         byte originalG = originalPixels[pixelIndex + 1];
                         byte originalR = originalPixels[pixelIndex + 2];
 
-                        // Symulowanie deuteranopii poprzez zmniejszenie zielonego kanału i skorygowanie RGB
                         int newR = (int)(originalR * 0.625 + originalG * 0.375);
-                        int newG = (int)(originalG * 0.7); // Zielony stłumiony
+                        int newG = (int)(originalG * 0.7);
                         int newB = (int)(originalB * 0.8);
 
                         newR = Clamp(newR, 0, 255);
                         newG = Clamp(newG, 0, 255);
                         newB = Clamp(newB, 0, 255);
 
-                        // Ustawianie wartości R, G, B w przetworzonym obrazie
                         simulatedPixels[pixelIndex] = (byte)newB;
                         simulatedPixels[pixelIndex + 1] = (byte)newG;
                         simulatedPixels[pixelIndex + 2] = (byte)newR;
@@ -208,16 +191,19 @@ namespace Projekt
                 }
             });
 
-            // Kopiowanie zmodyfikowanych danych pikseli z powrotem do przetworzonego obrazu
-            System.Runtime.InteropServices.Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);
+            Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);
 
-            // Odblokowanie pamięci
             original.UnlockBits(originalData);
             simulatedImage.UnlockBits(simulatedData);
 
             return simulatedImage;
+        }
 
-      
+        public static int Clamp(int value, int min, int max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
         }
     }
 }
