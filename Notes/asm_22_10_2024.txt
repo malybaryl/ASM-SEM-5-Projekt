@@ -1,0 +1,106 @@
+1. Inicjalizacja rejestrów
+asm
+Skopiuj kod
+mov r11, rcx              ; Save pointer to original image
+mov r10, rdx              ; Save pointer to processed image
+xor rbx, rbx              ; Use RBX as pixel counter
+Rejestr RCX (parametr) zawiera wskaźnik do oryginalnego obrazu (originalImage), który jest kopiowany do r11.
+Rejestr RDX (parametr) zawiera wskaźnik do przetworzonego obrazu (processedImage), kopiowany do r10.
+RBX jest wyzerowane i używane jako licznik pikseli (aktualny indeks piksela).
+2. Główna pętla przetwarzająca piksele
+asm
+Skopiuj kod
+PixelLoop:
+    cmp rbx, r8               ; Check if all pixels are processed
+    jge EndLoop               ; If rbx >= pixelCount, exit
+CMP porównuje wartość licznika pikseli RBX z liczbą pikseli R8 (pixelCount).
+Jeśli wszystkie piksele zostały przetworzone, JGE EndLoop kończy pętlę i wychodzi z procedury.
+3. Przetwarzanie koloru piksela
+asm
+Skopiuj kod
+    mov rax, rbx              ; Copy pixel counter to rax
+    shl rax, 1                ; rax = rbx * 2 (shift left by 1)
+    add rax, rbx              ; rax = rax + rbx = rbx * 3
+RAX jest używane do przechowywania przesuniętej wartości wskaźnika piksela. Ponieważ każdy piksel w formacie RGB składa się z 3 bajtów (dla kanałów B, G, R), robimy rbx * 3, by odnaleźć odpowiednie miejsce w pamięci dla bieżącego piksela.
+4. Ładowanie danych kolorów
+asm
+Skopiuj kod
+    mov al, byte ptr [r11 + rax]     ; Load blue channel
+    mov cl, byte ptr [r11 + rax + 1] ; Load green channel
+    mov dl, byte ptr [r11 + rax + 2] ; Load red channel
+Wartości kanałów kolorów (niebieski, zielony i czerwony) są ładowane z pamięci obrazu do rejestrów:
+AL dla niebieskiego,
+CL dla zielonego,
+DL dla czerwonego.
+5. Symulacja daltonizmu dla kanału czerwonego
+asm
+Skopiuj kod
+    movzx r8d, dl              ; Convert red channel to 32-bit
+    imul r8d, 625              ; R = R * 0.625
+    movzx r9d, cl              ; Convert green channel to 32-bit
+    imul r9d, 375              ; G = G * 0.375
+    add r8d, r9d               ; New Red = (R * 0.625 + G * 0.375)
+    shr r8d, 8                 ; Divide by 256 to fit in byte range
+MOVZX konwertuje wartość czerwonego i zielonego kanału do 32-bitów (w rejestrach R8D i R9D).
+Wartości są mnożone odpowiednio przez 0.625 dla czerwonego i 0.375 dla zielonego (w ten sposób zmniejszamy wrażliwość na czerwoną składową).
+Dodajemy wyniki i dzielimy przez 256 (SHR), aby wrócić do zakresu bajtowego.
+6. Klampowanie (ograniczanie) wartości kanału czerwonego
+asm
+Skopiuj kod
+    cmp r8d, 255
+    jle NoClampRed
+    mov r8d, 255
+NoClampRed:
+Porównujemy wartość R8D (nowa wartość czerwonego) z 255 (maksymalna wartość w formacie 8-bitowym).
+Jeśli wartość przekracza 255, ograniczamy ją do 255.
+7. Transformacja kanału zielonego
+asm
+Skopiuj kod
+    movzx r9d, cl              ; Reload green channel
+    imul r9d, 7                ; G = G * 0.7
+    shr r9d, 8                 ; Divide by 256
+Ponownie ładujemy wartość zielonego kanału do R9D, a następnie mnożymy ją przez 0.7, zmniejszając nasycenie zielonego.
+Dzielimy wynik przez 256, aby dopasować do zakresu bajtowego.
+8. Klampowanie wartości kanału zielonego
+asm
+Skopiuj kod
+    cmp r9d, 255
+    jle NoClampGreen
+    mov r9d, 255
+NoClampGreen:
+Podobnie jak dla czerwonego kanału, sprawdzamy, czy zielony kanał nie przekracza 255. Jeśli tak, ograniczamy go do 255.
+9. Transformacja kanału niebieskiego
+asm
+Skopiuj kod
+    movzx rax, al              ; Convert blue to 32-bit
+    imul rax, 8                ; B = B * 0.8
+    shr rax, 8                 ; Divide by 256
+Wartość niebieskiego kanału jest ładowana do RAX i mnożona przez 0.8, aby zmniejszyć intensywność.
+Wynik jest dzielony przez 256, aby dopasować go do zakresu.
+10. Klampowanie wartości kanału niebieskiego
+asm
+Skopiuj kod
+    cmp rax, 255
+    jle NoClampBlue
+    mov rax, 255
+NoClampBlue:
+Jak w przypadku pozostałych kanałów, sprawdzamy, czy niebieski kanał nie przekracza 255, i w razie potrzeby klampujemy do tej wartości.
+11. Zapis przetworzonego piksela
+asm
+Skopiuj kod
+    mov byte ptr [r10 + rax], al     ; Store blue channel
+    mov byte ptr [r10 + rax + 1], cl ; Store green channel
+    mov byte ptr [r10 + rax + 2], dl ; Store red channel
+Przetworzony piksel (nowe wartości kanałów niebieskiego, zielonego i czerwonego) jest zapisywany do nowego obrazu (processedImage) w odpowiednim miejscu w pamięci.
+12. Inkrementacja licznika pikseli i powrót do pętli
+asm
+Skopiuj kod
+    inc rbx                   ; Increment pixel counter
+    jmp PixelLoop             ; Repeat for next pixel
+Zwiększamy licznik RBX, który reprezentuje aktualny piksel, i wracamy do początku pętli, aby przetworzyć następny piksel.
+13. Koniec pętli
+asm
+Skopiuj kod
+EndLoop:
+    ret
+Po przetworzeniu wszystkich pikseli program kończy działanie.
