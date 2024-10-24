@@ -38,6 +38,7 @@ PixelLoop:
     cmp r8d, 255
     jle NoClampRed
     mov r8d, 255
+
 NoClampRed:
 
     ; Transform green channel

@@ -6,6 +6,11 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.IO;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Diagnostics;
 
 namespace Projekt
 {
@@ -17,6 +22,12 @@ namespace Projekt
 
         private Bitmap _originalImage;    // To hold the original image
         private Bitmap _processedImage;   // To hold the processed image
+
+        // Zmienne do przechowywania czasu przetwarzania
+        private Stopwatch stopwatch = new Stopwatch();
+        private long cSharpTime = 0;
+        private long asmTime = 0;
+
 
         /*
          * Main constructor for the MainWindow class.
@@ -93,7 +104,8 @@ namespace Projekt
             {
                 imagePathTextBox.Text = openFileDialog.FileName;        // Display selected image path
                 _originalImage = new Bitmap(openFileDialog.FileName);   // Load image into _originalImage
-                MessageBox.Show("Obraz został załadowany.");            // Show success message
+                MessageBox.Show("Obraz został załadowany.");            // Show success message                                                            
+                imageControl.Source = BitmapToImageSource(_originalImage); // Showing in GUI processed image
             }
         }
 
@@ -109,85 +121,136 @@ namespace Projekt
                 return;
             }
 
-            int threadCount = (int)threadSlider.Value;                  // Get the thread count from the slider
-
+            int threadCount = (int)threadSlider.Value;                  // Get the thread count from the slide
             _processedImage = new Bitmap(_originalImage.Width, _originalImage.Height); // Create a blank bitmap for processed image
+
+            // Getting chosen type of color blindness from ComboBox
+            string selectedColorBlindness = (colorBlindnessComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
 
             // Check if the ASM processing option is selected
             if (asmRadioButton.IsChecked == true)
             {
-                // Ensure images are loaded before processing
-                if (_originalImage == null || _processedImage == null)
-                {
-                    MessageBox.Show("Błąd: Obraz nie został załadowany.");  // Error if images are null
-                    return;
-                }
+                stopwatch.Restart(); // Start pomiaru czasu dla ASM
+                                     // Ensure images are loaded before processing
+                
+                processDeuteranopiaAsm();
 
-                // Lock bits of both the original and processed image to access pixel data directly
-                Rectangle rect = new Rectangle(0, 0, _originalImage.Width, _originalImage.Height);
-                BitmapData originalData = _originalImage.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-                BitmapData processedData = _processedImage.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+                stopwatch.Stop();   // Stop pomiaru czasu dla ASM
+                asmTime = stopwatch.ElapsedMilliseconds;   // Zapisz czas
 
-                int pixelCount = _originalImage.Width * _originalImage.Height;  // Total number of pixels
-                int stride = originalData.Stride;                               // Image stride
-                int rowsPerPartition = _originalImage.Height / Environment.ProcessorCount;  // Divide image into chunks based on CPU cores
 
-                IntPtr originalPtr = originalData.Scan0;                        // Pointer to original image data
-                IntPtr processedPtr = processedData.Scan0;                      // Pointer to processed image data
-
-                // Check if pointers are valid
-                if (originalPtr == IntPtr.Zero || processedPtr == IntPtr.Zero)
-                {
-                    MessageBox.Show("Błąd: Nie udało się zablokować obrazów.");   // Error message if locking bits failed
-                    _originalImage.UnlockBits(originalData);                     // Unlock bits
-                    _processedImage.UnlockBits(processedData);                   // Unlock bits
-                    return;
-                }
-
-                Console.WriteLine($"Original Image Pointer: {originalPtr}");     // Debug info
-                Console.WriteLine($"Processed Image Pointer: {processedPtr}");   // Debug info
-                Console.WriteLine($"Pixel Count: {pixelCount}");                 // Debug info
-                Console.WriteLine($"Stride: {stride}");                          // Debug info
-
-                try
-                {
-                    // Use Parallel.For to process each partition in a separate thread
-                    Parallel.For(0, Environment.ProcessorCount, partition =>
-                    {
-                        // Calculate the range of rows for this partition
-                        int startRow = partition * rowsPerPartition;
-                        int endRow = (partition == Environment.ProcessorCount - 1) ? _originalImage.Height : startRow + rowsPerPartition;
-
-                        int partitionPixelCount = (endRow - startRow) * _originalImage.Width;
-
-                        // Pointers for this partition
-                        IntPtr originalPartitionPtr = IntPtr.Add(originalPtr, startRow * stride);
-                        IntPtr processedPartitionPtr = IntPtr.Add(processedPtr, startRow * stride);
-
-                        // Call the ASM function to process the partition
-                        DeuteranopiaAsm(originalPartitionPtr, processedPartitionPtr, partitionPixelCount, stride);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Błąd podczas wywoływania funkcji ASM: {ex.Message}"); // Handle any ASM errors
-                    _originalImage.UnlockBits(originalData);                                // Unlock image bits
-                    _processedImage.UnlockBits(processedData);                              // Unlock image bits
-                    return;
-                }
-
-                // Unlock image bits after processing
-                _originalImage.UnlockBits(originalData);
-                _processedImage.UnlockBits(processedData);
-
+                asmTimeText.Text = $"{asmTime} ms";   // Zaktualizuj czas w GUI
                 MessageBox.Show("Obraz przetworzony w ASM.");   // Success message for ASM
             }
 
             // Check if the C# processing option is selected
             else if (cSharpRadioButton.IsChecked == true)
             {
-                _processedImage = SimulateDeuteranopia(_originalImage, threadCount);   // Process image in C#
-                MessageBox.Show("Obraz przetworzony w C#.");   // Success message for C#
+                stopwatch.Restart(); // Start pomiaru czasu dla C#
+                // Calling the appropriate method in C# depending on the selected color blindness mode
+                if (selectedColorBlindness == "Deuteranopia")
+                {
+                    _processedImage = SimulateDeuteranopia(_originalImage, threadCount);
+                }
+                else if (selectedColorBlindness == "Protanopia")
+                {
+                    _processedImage = SimulateProtanopia(_originalImage, threadCount);
+                }
+                else if (selectedColorBlindness == "Tritanopia")
+                {
+                    _processedImage = SimulateTritanopia(_originalImage, threadCount);
+                }
+                stopwatch.Stop();   // Stop pomiaru czasu dla C#
+                cSharpTime = stopwatch.ElapsedMilliseconds; // Zapisz czas
+
+                cSharpTimeText.Text = $"{cSharpTime} ms";   // Zaktualizuj czas w GUI
+                MessageBox.Show("Obraz przetworzony w C#.");
+            }
+
+            // Showing in GUI processed image
+            imageControl.Source = BitmapToImageSource(_processedImage);
+        }
+
+        private void processDeuteranopiaAsm()
+        {
+            if (_originalImage == null || _processedImage == null)
+            {
+                MessageBox.Show("Błąd: Obraz nie został załadowany.");  // Error if images are null
+                return;
+            }
+
+            // Lock bits of both the original and processed image to access pixel data directly
+            Rectangle rect = new Rectangle(0, 0, _originalImage.Width, _originalImage.Height);
+            BitmapData originalData = _originalImage.LockBits(rect, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapData processedData = _processedImage.LockBits(rect, ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            int pixelCount = _originalImage.Width * _originalImage.Height;  // Total number of pixels
+            int stride = originalData.Stride;                               // Image stride
+            int rowsPerPartition = _originalImage.Height / Environment.ProcessorCount;  // Divide image into chunks based on CPU cores
+
+            IntPtr originalPtr = originalData.Scan0;                        // Pointer to original image data
+            IntPtr processedPtr = processedData.Scan0;                      // Pointer to processed image data
+
+            // Check if pointers are valid
+            if (originalPtr == IntPtr.Zero || processedPtr == IntPtr.Zero)
+            {
+                MessageBox.Show("Błąd: Nie udało się zablokować obrazów.");   // Error message if locking bits failed
+                _originalImage.UnlockBits(originalData);                     // Unlock bits
+                _processedImage.UnlockBits(processedData);                   // Unlock bits
+                return;
+            }
+
+            Console.WriteLine($"Original Image Pointer: {originalPtr}");     // Debug info
+            Console.WriteLine($"Processed Image Pointer: {processedPtr}");   // Debug info
+            Console.WriteLine($"Pixel Count: {pixelCount}");                 // Debug info
+            Console.WriteLine($"Stride: {stride}");                          // Debug info
+
+            try
+            {
+                // Use Parallel.For to process each partition in a separate thread
+                Parallel.For(0, Environment.ProcessorCount, partition =>
+                {
+                    // Calculate the range of rows for this partition
+                    int startRow = partition * rowsPerPartition;
+                    int endRow = (partition == Environment.ProcessorCount - 1) ? _originalImage.Height : startRow + rowsPerPartition;
+
+                    int partitionPixelCount = (endRow - startRow) * _originalImage.Width;
+
+                    // Pointers for this partition
+                    IntPtr originalPartitionPtr = IntPtr.Add(originalPtr, startRow * stride);
+                    IntPtr processedPartitionPtr = IntPtr.Add(processedPtr, startRow * stride);
+
+                    // Call the ASM function to process the partition
+                    DeuteranopiaAsm(originalPartitionPtr, processedPartitionPtr, partitionPixelCount, stride);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd podczas wywoływania funkcji ASM: {ex.Message}"); // Handle any ASM errors
+                _originalImage.UnlockBits(originalData);                                // Unlock image bits
+                _processedImage.UnlockBits(processedData);                              // Unlock image bits
+                return;
+            }
+
+            // Unlock image bits after processing
+            _originalImage.UnlockBits(originalData);
+            _processedImage.UnlockBits(processedData);
+        }
+
+
+        // Konwersja Bitmapy na ImageSource dla wyświetlenia w kontrolce WPF
+        private ImageSource BitmapToImageSource(Bitmap bitmap)
+        {
+            using (MemoryStream memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Bmp);
+                memory.Position = 0;
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                return bitmapImage;
             }
         }
 
@@ -216,6 +279,61 @@ namespace Projekt
             }
         }
 
+        private void Debug_Click(object sender, RoutedEventArgs e)
+        {
+            if (_originalImage == null)
+            {
+                MessageBox.Show("Najpierw wybierz obraz.");
+                return;
+            }
+            // Liczba powtórzeń debugowania
+            const int debugIterations = 5;
+            long totalCSharpTime = 0;
+            long totalAsmTime = 0;
+
+            // Getting chosen type of color blindness from ComboBox
+            string selectedColorBlindness = (colorBlindnessComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+            int threadCount = (int)threadSlider.Value;                  // Get the thread count from the slide
+
+            // Debugowanie metody C#
+            for (int i = 0; i < debugIterations; i++)
+            {
+                stopwatch.Restart();
+                if (selectedColorBlindness == "Deuteranopia")
+                {
+                    _processedImage = SimulateDeuteranopia(_originalImage, threadCount);
+                }
+                else if (selectedColorBlindness == "Protanopia")
+                {
+                    _processedImage = SimulateProtanopia(_originalImage, threadCount);
+                }
+                else if (selectedColorBlindness == "Tritanopia")
+                {
+                    _processedImage = SimulateTritanopia(_originalImage, threadCount);
+                }
+                stopwatch.Stop();
+                totalCSharpTime += stopwatch.ElapsedMilliseconds;
+            }
+            cSharpTime = totalCSharpTime / debugIterations;
+
+            // Debugowanie metody ASM
+            for (int i = 0; i < debugIterations; i++)
+            {
+                stopwatch.Restart();
+                processDeuteranopiaAsm();  // Funkcja obsługująca wywołanie ASM
+                stopwatch.Stop();
+                totalAsmTime += stopwatch.ElapsedMilliseconds;
+            }
+            asmTime = totalAsmTime / debugIterations;
+
+            // Aktualizacja UI po debugowaniu
+            cSharpTimeText.Text = $"{cSharpTime} ms";
+            asmTimeText.Text = $"{asmTime} ms";
+            MessageBox.Show($"Debugowanie zakończone.\nCzas C#: {cSharpTime} ms\nCzas ASM: {asmTime} ms");
+            // Showing in GUI processed image
+            imageControl.Source = BitmapToImageSource(_processedImage);
+        }
+
         /*
          * Simulates deuteranopia (color blindness) on the provided image using multiple threads.
          * Uses parallelism to process the image more efficiently.
@@ -230,7 +348,7 @@ namespace Projekt
             BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
             BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
 
-            int bytesPerPixel = Image.GetPixelFormatSize(original.PixelFormat) / 8;    // Calculate bytes per pixel
+            int bytesPerPixel = System.Drawing.Image.GetPixelFormatSize(original.PixelFormat) / 8;    // Calculate bytes per pixel
             int stride = originalData.Stride;                                          // Get stride of the image
             IntPtr originalScan0 = originalData.Scan0;                                 // Pointer to original image data
             IntPtr simulatedScan0 = simulatedData.Scan0;                               // Pointer to simulated image data
@@ -284,6 +402,125 @@ namespace Projekt
             return simulatedImage;  // Return the processed (simulated) image
         }
 
+        // Simulates Protanopy
+public static Bitmap SimulateProtanopia(Bitmap original, int threads)
+{
+    int width = original.Width;
+    int height = original.Height;
+    Bitmap simulatedImage = new Bitmap(width, height, original.PixelFormat);
+
+    Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);
+    BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
+    BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
+
+    int bytesPerPixel = System.Drawing.Image.GetPixelFormatSize(original.PixelFormat) / 8;
+    int stride = originalData.Stride;
+    IntPtr originalScan0 = originalData.Scan0;
+    IntPtr simulatedScan0 = simulatedData.Scan0;
+
+    byte[] originalPixels = new byte[stride * height];
+    byte[] simulatedPixels = new byte[stride * height];
+
+    Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);
+
+    Parallel.For(0, threads, threadIndex =>
+    {
+        int partitionSize = height / threads;
+        int start = threadIndex * partitionSize;
+        int end = (threadIndex == threads - 1) ? height : start + partitionSize;
+
+        for (int y = start; y < end; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int pixelIndex = y * stride + x * bytesPerPixel;
+
+                byte originalB = originalPixels[pixelIndex];
+                byte originalG = originalPixels[pixelIndex + 1];
+                byte originalR = originalPixels[pixelIndex + 2];
+
+                int newR = (int)(originalR * 0.567 + originalG * 0.433);
+                int newG = (int)(originalG * 0.558);
+                int newB = (int)(originalB * 0.0);
+
+                newR = Clamp(newR, 0, 255);
+                newG = Clamp(newG, 0, 255);
+                newB = Clamp(newB, 0, 255);
+
+                simulatedPixels[pixelIndex] = (byte)newB;
+                simulatedPixels[pixelIndex + 1] = (byte)newG;
+                simulatedPixels[pixelIndex + 2] = (byte)newR;
+            }
+        }
+    });
+
+    Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);
+    original.UnlockBits(originalData);
+    simulatedImage.UnlockBits(simulatedData);
+
+    return simulatedImage;
+}
+
+// Symulacja tritanopii
+public static Bitmap SimulateTritanopia(Bitmap original, int threads)
+{
+    int width = original.Width;
+    int height = original.Height;
+    Bitmap simulatedImage = new Bitmap(width, height, original.PixelFormat);
+
+    Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);
+    BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
+    BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
+
+    int bytesPerPixel = System.Drawing.Image.GetPixelFormatSize(original.PixelFormat) / 8;
+    int stride = originalData.Stride;
+    IntPtr originalScan0 = originalData.Scan0;
+    IntPtr simulatedScan0 = simulatedData.Scan0;
+
+    byte[] originalPixels = new byte[stride * height];
+    byte[] simulatedPixels = new byte[stride * height];
+
+    Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);
+
+    Parallel.For(0, threads, threadIndex =>
+    {
+        int partitionSize = height / threads;
+        int start = threadIndex * partitionSize;
+        int end = (threadIndex == threads - 1) ? height : start + partitionSize;
+
+        for (int y = start; y < end; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int pixelIndex = y * stride + x * bytesPerPixel;
+
+                byte originalB = originalPixels[pixelIndex];
+                byte originalG = originalPixels[pixelIndex + 1];
+                byte originalR = originalPixels[pixelIndex + 2];
+
+                int newR = (int)(originalR * 0.95);
+                int newG = (int)(originalG * 0.433);
+                int newB = (int)(originalB * 0.567);
+
+                newR = Clamp(newR, 0, 255);
+                newG = Clamp(newG, 0, 255);
+                newB = Clamp(newB, 0, 255);
+
+                simulatedPixels[pixelIndex] = (byte)newB;
+                simulatedPixels[pixelIndex + 1] = (byte)newG;
+                simulatedPixels[pixelIndex + 2] = (byte)newR;
+            }
+        }
+    });
+
+    Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);
+    original.UnlockBits(originalData);
+    simulatedImage.UnlockBits(simulatedData);
+
+    return simulatedImage;
+}
+
+
         /*
          * Clamps an integer value between the provided minimum and maximum values.
          */
@@ -293,5 +530,7 @@ namespace Projekt
             if (value > max) return max;  // Return the maximum if the value is too high
             return value;                 // Return the original value if within range
         }
+
+        
     }
 }
