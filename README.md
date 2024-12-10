@@ -1,4 +1,4 @@
-# Symulowanie Daltonizmu (Deuteranopia)
+# Symulowanie Daltonizmu
 
 ## Opis
 
