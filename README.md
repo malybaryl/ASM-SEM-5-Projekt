@@ -3,6 +3,7 @@
 ## Opis
 
 Projekt symulacji daltonizmu typu **Deuteranopia** pozwala na przekształcenie kolorów obrazu w taki sposób, aby naśladować sposób widzenia osób cierpiących na ten rodzaj ślepoty barw. Osoby z deuteranopią mają trudności z rozróżnianiem odcieni zieleni i czerwieni, co prowadzi do specyficznej percepcji obrazu. Symulacja uwzględnia te zmiany, aby jak najwierniej oddać doświadczanie świata przez osoby z tym zaburzeniem.
+Po więcej informacji: [Zobacz prezentację](Prezentacja/Prezentacja-Daltonizm-Projekt-JA-SEM.5-Kacper-Baryłowicz.pdf)
 
 ## Technologie
 
@@ -27,6 +28,4 @@ Projekt został stworzony przez **Kacpra Baryłowicza** (GitHub: [malybaryl](htt
 ## Dodatkowe informacje
 
 Projekt pokazuje, jak nowoczesne narzędzia programistyczne, takie jak C#, mogą być zintegrowane z niskopoziomowym programowaniem w asemblerze, aby osiągnąć większą wydajność. Wybór liczby wątków oraz testowanie dwóch podejść wykonawczych (C# vs ASM) czyni ten projekt interesującym eksperymentem dla osób zainteresowanych optymalizacją i architekturą oprogramowania.
-
-<iframe src="Prezentacja/Prezentacja-Daltonizm-Projekt-JA-SEM.5-Kacper-Baryłowicz.pdf" width="100%" height="600px"></iframe>
 
