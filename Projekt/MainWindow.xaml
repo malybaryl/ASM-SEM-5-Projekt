@@ -45,7 +45,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="DEUTERANOPIA"
+            <TextBlock Text="DALTONIZM"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"
                        Foreground="White"
@@ -91,7 +91,7 @@
                 <Slider Name="threadSlider"
                         Width="160"
                         Minimum="1"
-                        Maximum="200"
+                        Maximum="64"
                         TickFrequency="1"
                         ValueChanged="Slider_ValueChanged"/>
 
