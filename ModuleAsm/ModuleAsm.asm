@@ -1,67 +1,75 @@
 .code
 DeuteranopiaAsm proc
 
-SimulateColorBlindnessASM:
-    ; RCX = originalImage (pointer)
-    ; RDX = processedImage (pointer)
-    ; R8  = pixelCount (number of pixels)
-    ; R9 = stride
-    ; [RSP + 8] = blindnessType
+;
+;   INITIALIZATION
+;
+
+    ; Save callee-saved registers
+    movd xmm3, rcx ; IntPtr originalImage  
+    movd xmm4, rdx ; IntPtr processedImage
+    movd xmm5, r8  ; int pixelCount
+    movd xmm6, r9  ; int stride
+    movd xmm7, rbx ; int blindnessType
+   
+    ; Checking blindnessType
+    movd eax, xmm7                      ; Load blindnessType(int) to eax
+
+    cmp eax, 0                          ; if blindnessType == 0
+    je ProcessPixelLoopDeuteranopia     ; process Deuteranopia
+
+    cmp eax, 1                          ; if blindnessType == 1
+    je ProcessPixelLoopProtanopia       ; process Protanopia
+
+    cmp eax, 2                          ; if blindnessType == 2
+    je ProcessPixelLoopTritanopia       ; process Tritanopia
+
+    ; Default process ( if blindnessType != 0,1,2 ) is Deuteranopia
+
+   
+;
+;   DEUTERANOPIA
+;
+; newR = (originalR * 0.625 + originalG * 0.375);                          
+; newG = (originalG * 0.7);                           
+; newB = (originalB * 0.8);
+;
+;
+
+ProcessPixelLoopDeuteranopia:
+    jmp ProcessPixelLoopDeuteranopia 
+
     
-    ; Saving at the stack...
-    push [RSP + 8]
-    push RCX
-    push RDX
-    push R8
-    push R9
+;
+;   PROTANOPIA
+;
+;   newR = (originalR * 0.567 + originalG * 0.433);
+;   newG = (originalG * 0.558);
+;   newB = (originalB * 0.0);
+;
+;
 
-    ; STACK: 
-    ; blindnessType
-    ; originalImage
-    ; processedImage
-    ; pixelCount
-    ; stride  
+ProcessPixelLoopProtanopia:
+    jmp ProcessPixelLoopProtanopia           
 
-    ; Checking blindness Type
-    xor RAX, RAX
-    mov RCX, [rsp]
-    add RAX, RCX
-    
-    ; if RAX == 0 - jump to DeuteranopiaLoop
-    cmp RAX, 0              
-    je DeuteranopiaLoop     
+;
+;   TRITANOPIA
+;
+; newR = (originalR * 0.95);
+; newG = (originalG * 0.433);
+; newB = (originalB * 0.567);
 
-    ; if RAX == 1 - jump to ProtanopiaLoop
-    cmp RAX, 1              
-    je ProtanopiaLoop      
+ProcessPixelLoopTritanopia: 
+    jmp ProcessPixelLoopTritanopia          
 
-    ; if RAX == 2 - jump to ProtanopiaLoop
-    cmp RAX, 2              
-    je TritanopiaLoop       
 
-    ; else end
-    jmp EndLoop
-
-DeuteranopiaLoop:
-    xor eax, eax
-    inc eax
-    jmp EndLoop
-
-ProtanopiaLoop:
-    xor eax, eax
-    inc eax
-    inc eax
-    jmp EndLoop
-
-TritanopiaLoop:
-    xor eax, eax
-    inc eax
-    inc eax
-    inc eax
-    jmp EndLoop
+;
+;   END LOOP
+;
 
 EndLoop:
-    ; end protocol
-    ret                      
+    ret                           
+
 DeuteranopiaAsm endp
+
 end

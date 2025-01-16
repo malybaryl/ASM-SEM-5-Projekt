@@ -11,6 +11,7 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Diagnostics;
+using ColorBlindnessCS;
 
 namespace Projekt
 {
@@ -23,11 +24,14 @@ namespace Projekt
         private Bitmap _originalImage;    // To hold the original image
         private Bitmap _processedImage;   // To hold the processed image
 
+        private int threadValue;
+
         // Zmienne do przechowywania czasu przetwarzania
-        private Stopwatch stopwatch = new Stopwatch();
+        private Stopwatch stopwatch = new Stopwatch();  
         private long cSharpTime = 0;
         private long asmTime = 0;
-
+        
+         
 
         /*
          * Main constructor for the MainWindow class.
@@ -83,7 +87,7 @@ namespace Projekt
         {
             if (threadCount != null)
             {
-                int threadValue = (int)threadSlider.Value;             // Get the slider's value as an integer
+                threadValue = (int)threadSlider.Value;             // Get the slider's value as an integer
                 threadCount.Text = $"Ilość wątków: {threadValue}";      // Display the number of threads
             }
         }
@@ -161,15 +165,15 @@ namespace Projekt
                 // Calling the appropriate method in C# depending on the selected color blindness mode
                 if (selectedColorBlindness == "Deuteranopia")
                 {
-                    _processedImage = SimulateDeuteranopia(_originalImage, threadCount);
+                    ProcessColorBlindnessCS(0, threadCount);
                 }
                 else if (selectedColorBlindness == "Protanopia")
                 {
-                    _processedImage = SimulateProtanopia(_originalImage, threadCount);
+                    ProcessColorBlindnessCS(1, threadCount);
                 }
                 else if (selectedColorBlindness == "Tritanopia")
                 {
-                    _processedImage = SimulateTritanopia(_originalImage, threadCount);
+                    ProcessColorBlindnessCS(2, threadCount);
                 }
                 stopwatch.Stop();   // Stop pomiaru czasu dla C#
                 cSharpTime = stopwatch.ElapsedMilliseconds; // Zapisz czas
@@ -202,11 +206,11 @@ namespace Projekt
 
             try
             {
-                Parallel.For(0, Environment.ProcessorCount, partition =>
+                Parallel.For(0, threadValue, partition =>
                 {
-                    int rowsPerPartition = _originalImage.Height / Environment.ProcessorCount;
+                    int rowsPerPartition = _originalImage.Height / threadValue;
                     int startRow = partition * rowsPerPartition;
-                    int endRow = (partition == Environment.ProcessorCount - 1) ? _originalImage.Height : startRow + rowsPerPartition;
+                    int endRow = (partition == threadValue - 1) ? _originalImage.Height : startRow + rowsPerPartition;
 
                     int partitionPixelCount = (endRow - startRow) * _originalImage.Width;
                     IntPtr originalPartitionPtr = IntPtr.Add(originalPtr, startRow * stride);
@@ -226,6 +230,34 @@ namespace Projekt
                 _processedImage.UnlockBits(processedData);
             }
         }
+
+
+            private void ProcessColorBlindnessCS(int blindnessType, int threadCount)
+            {
+                if (_originalImage == null || _processedImage == null)
+                {
+                    MessageBox.Show("Błąd: Obraz nie został załadowany.");
+                    return;
+                }
+
+                // Przygotowanie bitmap do przetwarzania
+                Rectangle rect = new Rectangle(0, 0, _originalImage.Width, _originalImage.Height);
+                BitmapData originalData = _originalImage.LockBits(rect, ImageLockMode.ReadOnly, _originalImage.PixelFormat);
+                BitmapData processedData = _processedImage.LockBits(rect, ImageLockMode.WriteOnly, _originalImage.PixelFormat);
+
+                int pixelCount = _originalImage.Width * _originalImage.Height;
+                int stride = originalData.Stride;
+                IntPtr originalPtr = originalData.Scan0;
+                IntPtr processedPtr = processedData.Scan0;
+
+            // Wywołanie metody Execute z DLL z wieloma wątkami
+            ColorBlindnessCSClass.Execute(originalPtr, processedPtr, pixelCount, stride, blindnessType, threadCount);
+
+                // Odblokowanie bitmap
+                _originalImage.UnlockBits(originalData);
+                _processedImage.UnlockBits(processedData);
+            }
+        
 
 
         // Konwersja Bitmapy na ImageSource dla wyświetlenia w kontrolce WPF
@@ -291,15 +323,15 @@ namespace Projekt
                 stopwatch.Restart();
                 if (selectedColorBlindness == "Deuteranopia")
                 {
-                    _processedImage = SimulateDeuteranopia(_originalImage, threadCount);
+                    ProcessColorBlindnessCS(0, threadCount);
                 }
                 else if (selectedColorBlindness == "Protanopia")
                 {
-                    _processedImage = SimulateProtanopia(_originalImage, threadCount);
+                    ProcessColorBlindnessCS(1, threadCount);
                 }
                 else if (selectedColorBlindness == "Tritanopia")
                 {
-                    _processedImage = SimulateTritanopia(_originalImage, threadCount);
+                    ProcessColorBlindnessCS(2, threadCount);
                 }
                 stopwatch.Stop();
                 totalCSharpTime += stopwatch.ElapsedMilliseconds;
@@ -335,202 +367,10 @@ namespace Projekt
             imageControl.Source = BitmapToImageSource(_processedImage);
         }
 
-        /*
-         * Simulates deuteranopia (color blindness) on the provided image using multiple threads.
-         * Uses parallelism to process the image more efficiently.
-         */
-        public static Bitmap SimulateDeuteranopia(Bitmap original, int threads)
-        {
-            int width = original.Width;
-            int height = original.Height;
-            Bitmap simulatedImage = new Bitmap(width, height, original.PixelFormat);   // Create an empty bitmap
-
-            Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);     // Define the region to lock
-            BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
-            BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
-
-            int bytesPerPixel = System.Drawing.Image.GetPixelFormatSize(original.PixelFormat) / 8;    // Calculate bytes per pixel
-            int stride = originalData.Stride;                                          // Get stride of the image
-            IntPtr originalScan0 = originalData.Scan0;                                 // Pointer to original image data
-            IntPtr simulatedScan0 = simulatedData.Scan0;                               // Pointer to simulated image data
-
-            byte[] originalPixels = new byte[stride * height];                         // Byte array to hold original pixel data
-            byte[] simulatedPixels = new byte[stride * height];                        // Byte array to hold simulated pixel data
-
-            Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);     // Copy original pixel data to array
-
-            // Parallelize the simulation using multiple threads
-            Parallel.For(0, threads, threadIndex =>
-            {
-                int partitionSize = height / threads;                                  // Divide the image height into partitions
-                int start = threadIndex * partitionSize;                               // Start index for each thread
-                int end = (threadIndex == threads - 1) ? height : start + partitionSize; // Last thread handles any remaining pixels
-
-                // Process the pixels within the assigned partition
-                for (int y = start; y < end; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        int pixelIndex = y * stride + x * bytesPerPixel;               // Calculate pixel index
-
-                        byte originalB = originalPixels[pixelIndex];                   // Blue component
-                        byte originalG = originalPixels[pixelIndex + 1];               // Green component
-                        byte originalR = originalPixels[pixelIndex + 2];               // Red component
-
-                        // Apply color transformation for deuteranopia
-                        int newR = (int)(originalR * 0.625 + originalG * 0.375);
-                        int newG = (int)(originalG * 0.7);
-                        int newB = (int)(originalB * 0.8);
-
-                        // Clamp values to ensure they're within valid RGB range
-                        newR = Clamp(newR, 0, 255);
-                        newG = Clamp(newG, 0, 255);
-                        newB = Clamp(newB, 0, 255);
-
-                        // Store the transformed values in the simulated pixel array
-                        simulatedPixels[pixelIndex] = (byte)newB;
-                        simulatedPixels[pixelIndex + 1] = (byte)newG;
-                        simulatedPixels[pixelIndex + 2] = (byte)newR;
-                    }
-                }
-            });
-
-            Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);  // Copy the processed pixel data back
-
-            original.UnlockBits(originalData);  // Unlock the original image bits
-            simulatedImage.UnlockBits(simulatedData);  // Unlock the simulated image bits
-
-            return simulatedImage;  // Return the processed (simulated) image
-        }
-
-        // Simulates Protanopy
-public static Bitmap SimulateProtanopia(Bitmap original, int threads)
-{
-    int width = original.Width;
-    int height = original.Height;
-    Bitmap simulatedImage = new Bitmap(width, height, original.PixelFormat);
-
-    Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);
-    BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
-    BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
-
-    int bytesPerPixel = System.Drawing.Image.GetPixelFormatSize(original.PixelFormat) / 8;
-    int stride = originalData.Stride;
-    IntPtr originalScan0 = originalData.Scan0;
-    IntPtr simulatedScan0 = simulatedData.Scan0;
-
-    byte[] originalPixels = new byte[stride * height];
-    byte[] simulatedPixels = new byte[stride * height];
-
-    Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);
-
-    Parallel.For(0, threads, threadIndex =>
-    {
-        int partitionSize = height / threads;
-        int start = threadIndex * partitionSize;
-        int end = (threadIndex == threads - 1) ? height : start + partitionSize;
-
-        for (int y = start; y < end; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                int pixelIndex = y * stride + x * bytesPerPixel;
-
-                byte originalB = originalPixels[pixelIndex];
-                byte originalG = originalPixels[pixelIndex + 1];
-                byte originalR = originalPixels[pixelIndex + 2];
-
-                int newR = (int)(originalR * 0.567 + originalG * 0.433);
-                int newG = (int)(originalG * 0.558);
-                int newB = (int)(originalB * 0.0);
-
-                newR = Clamp(newR, 0, 255);
-                newG = Clamp(newG, 0, 255);
-                newB = Clamp(newB, 0, 255);
-
-                simulatedPixels[pixelIndex] = (byte)newB;
-                simulatedPixels[pixelIndex + 1] = (byte)newG;
-                simulatedPixels[pixelIndex + 2] = (byte)newR;
-            }
-        }
-    });
-
-    Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);
-    original.UnlockBits(originalData);
-    simulatedImage.UnlockBits(simulatedData);
-
-    return simulatedImage;
-}
-
-// Symulacja tritanopii
-public static Bitmap SimulateTritanopia(Bitmap original, int threads)
-{
-    int width = original.Width;
-    int height = original.Height;
-    Bitmap simulatedImage = new Bitmap(width, height, original.PixelFormat);
-
-    Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);
-    BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, original.PixelFormat);
-    BitmapData simulatedData = simulatedImage.LockBits(rect, ImageLockMode.WriteOnly, simulatedImage.PixelFormat);
-
-    int bytesPerPixel = System.Drawing.Image.GetPixelFormatSize(original.PixelFormat) / 8;
-    int stride = originalData.Stride;
-    IntPtr originalScan0 = originalData.Scan0;
-    IntPtr simulatedScan0 = simulatedData.Scan0;
-
-    byte[] originalPixels = new byte[stride * height];
-    byte[] simulatedPixels = new byte[stride * height];
-
-    Marshal.Copy(originalScan0, originalPixels, 0, originalPixels.Length);
-
-    Parallel.For(0, threads, threadIndex =>
-    {
-        int partitionSize = height / threads;
-        int start = threadIndex * partitionSize;
-        int end = (threadIndex == threads - 1) ? height : start + partitionSize;
-
-        for (int y = start; y < end; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                int pixelIndex = y * stride + x * bytesPerPixel;
-
-                byte originalB = originalPixels[pixelIndex];
-                byte originalG = originalPixels[pixelIndex + 1];
-                byte originalR = originalPixels[pixelIndex + 2];
-
-                int newR = (int)(originalR * 0.95);
-                int newG = (int)(originalG * 0.433);
-                int newB = (int)(originalB * 0.567);
-
-                newR = Clamp(newR, 0, 255);
-                newG = Clamp(newG, 0, 255);
-                newB = Clamp(newB, 0, 255);
-
-                simulatedPixels[pixelIndex] = (byte)newB;
-                simulatedPixels[pixelIndex + 1] = (byte)newG;
-                simulatedPixels[pixelIndex + 2] = (byte)newR;
-            }
-        }
-    });
-
-    Marshal.Copy(simulatedPixels, 0, simulatedScan0, simulatedPixels.Length);
-    original.UnlockBits(originalData);
-    simulatedImage.UnlockBits(simulatedData);
-
-    return simulatedImage;
-}
 
 
-        /*
-         * Clamps an integer value between the provided minimum and maximum values.
-         */
-        public static int Clamp(int value, int min, int max)
-        {
-            if (value < min) return min;  // Return the minimum if the value is too low
-            if (value > max) return max;  // Return the maximum if the value is too high
-            return value;                 // Return the original value if within range
-        }
+
+       
 
         
     }
