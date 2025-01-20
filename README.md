@@ -1,31 +1,195 @@
 # Symulowanie Daltonizmu
+**English description is available below.**
 
 ## Opis
 
-Projekt symulacji daltonizmu typu **Deuteranopia** pozwala na przekształcenie kolorów obrazu w taki sposób, aby naśladować sposób widzenia osób cierpiących na ten rodzaj ślepoty barw. Osoby z deuteranopią mają trudności z rozróżnianiem odcieni zieleni i czerwieni, co prowadzi do specyficznej percepcji obrazu. Symulacja uwzględnia te zmiany, aby jak najwierniej oddać doświadczanie świata przez osoby z tym zaburzeniem.
-Po więcej informacji: [Zobacz prezentację](Prezentacja/Prezentacja-Daltonizm-Projekt-JA-SEM.5-Kacper-Baryłowicz.pdf)
+Projekt **Symulowanie Daltonizmu** umożliwia przekształcanie obrazów w taki sposób, aby naśladować sposób widzenia osób cierpiących na różne typy daltonizmu, w tym **Deuteranopię**, **Protanopię** i **Tritanopię**. Użytkownik może wybrać typ daltonizmu, którego efekt chce symulować. Program przetwarza obraz, symulując zmiany w postrzeganiu kolorów zgodnie z wybranym rodzajem ślepoty barw.
+
+W szczególności:
+
+- **Deuteranopia** (typ 0) – problemy z rozróżnianiem zieleni i czerwieni;
+- **Protanopia** (typ 1) – trudności w rozróżnianiu odcieni czerwieni;
+- **Tritanopia** (typ 2) – zaburzenia w rozróżnianiu niebieskich i zielonych odcieni.
+
+### Wzory dla każdego typu daltonizmu
+
+#### 1. **Deuteranopia** (typ 0)
+Osoby z deuteranopią mają problemy z rozróżnianiem odcieni zieleni i czerwieni. Wzory przekształcają składniki kolorów w sposób uwzględniający ten defekt:
+
+- **Czerwony kanał (newR)**:  
+  \[
+  \text{newR} = 0.625 \times \text{originalR} + 0.375 \times \text{originalG}
+  \]
+
+- **Zielony kanał (newG)**:  
+  \[
+  \text{newG} = 0.7 \times \text{originalG}
+  \]
+
+- **Niebieski kanał (newB)**:  
+  \[
+  \text{newB} = 0.8 \times \text{originalB}
+  \]
+
+#### 2. **Protanopia** (typ 1)
+Dla osób z protanopią trudność stanowi rozróżnianie odcieni czerwieni. Wzory dla tego typu daltonizmu to:
+
+- **Czerwony kanał (newR)**:  
+  \[
+  \text{newR} = 0.567 \times \text{originalR} + 0.433 \times \text{originalG}
+  \]
+
+- **Zielony kanał (newG)**:  
+  \[
+  \text{newG} = 0.558 \times \text{originalG}
+  \]
+
+- **Niebieski kanał (newB)**:  
+  \[
+  \text{newB} = 0 \times \text{originalB}
+  \]
+
+#### 3. **Tritanopia** (typ 2)
+W przypadku tritanopii problemy występują przy rozróżnianiu odcieni niebieskiego i zielonego. Wzory dla tego typu to:
+
+- **Czerwony kanał (newR)**:  
+  \[
+  \text{newR} = 0.95 \times \text{originalR}
+  \]
+
+- **Zielony kanał (newG)**:  
+  \[
+  \text{newG} = 0.433 \times \text{originalG}
+  \]
+
+- **Niebieski kanał (newB)**:  
+  \[
+  \text{newB} = 0.567 \times \text{originalB}
+  \]
+
+### Kluczowe funkcje:
+- **Wybór typu daltonizmu**: Deuteranopia, Protanopia, Tritanopia.
+- **Wielowątkowość**: Automatyczne ustawienie liczby wątków oraz możliwość ręcznego dostosowania.
+- **Wydajność**: Testy porównawcze między C# i ASM, obliczanie średniego czasu wykonania.
+- **ASM z instrukcjami wektorowymi**: Przyspieszenie operacji przetwarzania obrazów.
+
+Program jest napisany w języku **polskim**, ale jego interfejs jest intuicyjny, więc można go używać bez znajomości języka polskiego. **Kod źródłowy** jest w języku **angielskim**.
 
 ## Technologie
 
-Projekt został napisany w języku **C#** i oferuje kilka zaawansowanych funkcji, takich jak:
-
-- Możliwość wyboru liczby wątków, na których ma działać program (wielowątkowość),
-- Wybór trybu wykonania programu: za pomocą modułów wbudowanych w **C#** lub przy użyciu kodu w **Asemblerze** (ASM),
-- Zliczanie czasu wykonywania programu w obu trybach, aby porównać wydajność kodu w C# z tym napisanym w ASM.
-
-## Funkcjonalność
-
-Program jest dostępny wyłącznie na **Windows** i obsługuje pliki graficzne w formacie **JPEG**. Użytkownik przesyła obraz JPEG, który zostaje przekształcony tak, aby symulował widzenie osoby z deuteranopią. Wynikowy obraz pokazuje, jak wyglądałby dla osoby z tym typem daltonizmu.
+- **Język**: C# (z użyciem ASM dla zwiększenia wydajności)
+- **Platforma**: Windows
+- **Formaty**: Obsługuje pliki graficzne **JPEG**
+- **Wielowątkowość**: Obsługuje od 1 do 64 wątków
+- **Wydajność**: Porównanie C# vs ASM
 
 ## Cel projektu
 
-Głównym celem projektu jest przeprowadzenie analizy, czy wykonywanie kodu napisanego w asemblerze daje znaczące przewagi wydajnościowe w porównaniu do kodu napisanego w C#. Dzięki temu użytkownik może zbadać różnice czasowe oraz lepiej zrozumieć, jak efektywnie można wykorzystać zasoby sprzętowe w obu językach.
+Celem projektu jest porównanie wydajności kodu w **C#** oraz **ASM** przy przetwarzaniu obrazów w celu symulowania daltonizmu. Dodatkowo, użytkownicy mogą eksperymentować z różną liczbą wątków, aby zbadać, jak wielowątkowość wpływa na czas wykonania.
 
 ## Autor
 
-Projekt został stworzony przez **Kacpra Baryłowicza** (GitHub: [malybaryl](https://github.com/malybaryl)) jako część zaliczenia z przedmiotu **Języki Asemblerowe** na Politechnice Śląskiej w Katowicach.
+Projekt stworzony przez **Kacpra Baryłowicza** (GitHub: [malybaryl](https://github.com/malybaryl)) jako część zaliczenia z przedmiotu **Języki Asemblerowe** na Politechnice Śląskiej w Katowicach.
 
 ## Dodatkowe informacje
 
-Projekt pokazuje, jak nowoczesne narzędzia programistyczne, takie jak C#, mogą być zintegrowane z niskopoziomowym programowaniem w asemblerze, aby osiągnąć większą wydajność. Wybór liczby wątków oraz testowanie dwóch podejść wykonawczych (C# vs ASM) czyni ten projekt interesującym eksperymentem dla osób zainteresowanych optymalizacją i architekturą oprogramowania.
+Projekt demonstruje, jak nowoczesne technologie (C#) mogą współpracować z niskopoziomowym programowaniem (ASM) w celu uzyskania lepszej wydajności. Dzięki różnym podejściom do wielowątkowości oraz testowaniu dwóch języków, użytkownik ma okazję zgłębić zagadnienia związane z optymalizacją i architekturą oprogramowania.
 
+---
+
+# Color Blindness Simulation
+**The description in Polish is above.**
+
+## Description
+
+This project simulates color blindness by transforming images to mimic the vision of people suffering from **Deuteranopia**, **Protanopia**, and **Tritanopia**. The user can select the type of color blindness to simulate, and the program processes the image to reflect how it would appear to someone with the chosen type of color vision deficiency.
+
+Specifically:
+
+- **Deuteranopia** (type 0) – difficulty distinguishing green and red shades;
+- **Protanopia** (type 1) – problems with distinguishing red hues;
+- **Tritanopia** (type 2) – trouble distinguishing blue and green hues.
+
+### Mathematical Formulas for each type of color blindness
+
+#### 1. **Deuteranopia** (type 0)
+People with deuteranopia have difficulty distinguishing green and red shades. The transformation formulas are as follows:
+
+- **Red channel (newR)**:  
+  \[
+  \text{newR} = 0.625 \times \text{originalR} + 0.375 \times \text{originalG}
+  \]
+
+- **Green channel (newG)**:  
+  \[
+  \text{newG} = 0.7 \times \text{originalG}
+  \]
+
+- **Blue channel (newB)**:  
+  \[
+  \text{newB} = 0.8 \times \text{originalB}
+  \]
+
+#### 2. **Protanopia** (type 1)
+For people with protanopia, difficulty lies in distinguishing red hues. The formulas for this type are:
+
+- **Red channel (newR)**:  
+  \[
+  \text{newR} = 0.567 \times \text{originalR} + 0.433 \times \text{originalG}
+  \]
+
+- **Green channel (newG)**:  
+  \[
+  \text{newG} = 0.558 \times \text{originalG}
+  \]
+
+- **Blue channel (newB)**:  
+  \[
+  \text{newB} = 0 \times \text{originalB}
+  \]
+
+#### 3. **Tritanopia** (type 2)
+In the case of tritanopia, there are issues with distinguishing blue and green hues. The formulas for this type are:
+
+- **Red channel (newR)**:  
+  \[
+  \text{newR} = 0.95 \times \text{originalR}
+  \]
+
+- **Green channel (newG)**:  
+  \[
+  \text{newG} = 0.433 \times \text{originalG}
+  \]
+
+- **Blue channel (newB)**:  
+  \[
+  \text{newB} = 0.567 \times \text{originalB}
+  \]
+
+### Key Features:
+- **Choose color blindness type**: Deuteranopia, Protanopia, Tritanopia.
+- **Multithreading**: Automatic or manual thread count adjustment.
+- **Performance**: Compare execution times between C# and ASM.
+- **ASM with vector instructions**: Speeds up pixel processing.
+
+The program is written in **Polish**, but its interface is intuitive and can be used without knowledge of the Polish language. The **source code** is written in **English**.
+
+## Technologies
+
+- **Language**: C# (with ASM for performance enhancement)
+- **Platform**: Windows
+- **File formats**: Supports **JPEG** images
+- **Multithreading**: Supports 1 to 64 threads
+- **Performance**: C# vs ASM comparison
+
+## Project Goal
+
+The goal of this project is to compare the performance of **C#** and **ASM** when processing images to simulate color blindness. Additionally, users can experiment with different thread counts to observe the impact of multithreading on execution time.
+
+## Author
+
+This project was created by **Kacper Baryłowicz** (GitHub: [malybaryl](https://github.com/malybaryl)) as part of an assignment for the **Assembly Languages** course at the Silesian University of Technology in Katowice.
+
+## Additional Information
+
+This project demonstrates how modern technologies (C#) can be integrated with low-level programming (ASM) to achieve better performance. With different approaches to multithreading and testing two languages, users have the opportunity to explore optimization and software architecture.
