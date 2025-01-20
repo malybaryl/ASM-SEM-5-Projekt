@@ -179,7 +179,7 @@
 
             <!-- Informacja o projekcie -->
             <TextBlock Grid.Row="1"
-                       Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Elektrotechnika, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
+                       Text="Aplikacja wykonana na potrzeby projektu: 'Języki Asemblerowe', Politechnika Śląska Katowice, Wydział: Automatyka, Robotyka i Informatyka, Kierunek: Informatyka. Autor aplikacji: Kacper Baryłowicz (GitHub: @malybaryl). Kod źródłowy dostępny jako open source."
                        Foreground="White"
                        FontFamily="/Fonts/#Poppins"
                        FontSize="8" 
