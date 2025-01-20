@@ -17,55 +17,38 @@ W szczególności:
 Osoby z deuteranopią mają problemy z rozróżnianiem odcieni zieleni i czerwieni. Wzory przekształcają składniki kolorów w sposób uwzględniający ten defekt:
 
 - **Czerwony kanał (newR)**:  
-  \[
-  \text{newR} = 0.625 \times \text{originalR} + 0.375 \times \text{originalG}
-  \]
+  `newR = oldR * 0.625 + oldG * 0.375`
 
 - **Zielony kanał (newG)**:  
-  \[
-  \text{newG} = 0.7 \times \text{originalG}
-  \]
+  `newG = oldG * 0.7`
 
 - **Niebieski kanał (newB)**:  
-  \[
-  \text{newB} = 0.8 \times \text{originalB}
-  \]
+  `newB = oldB * 0.8`
 
 #### 2. **Protanopia** (typ 1)
 Dla osób z protanopią trudność stanowi rozróżnianie odcieni czerwieni. Wzory dla tego typu daltonizmu to:
 
 - **Czerwony kanał (newR)**:  
-  \[
-  \text{newR} = 0.567 \times \text{originalR} + 0.433 \times \text{originalG}
-  \]
+  `newR = oldR * 0.567 + oldG * 0.433`
 
 - **Zielony kanał (newG)**:  
-  \[
-  \text{newG} = 0.558 \times \text{originalG}
-  \]
+  `newG = oldG * 0.558`
 
 - **Niebieski kanał (newB)**:  
-  \[
-  \text{newB} = 0 \times \text{originalB}
-  \]
+  `newB = oldB * 0`
 
 #### 3. **Tritanopia** (typ 2)
 W przypadku tritanopii problemy występują przy rozróżnianiu odcieni niebieskiego i zielonego. Wzory dla tego typu to:
 
 - **Czerwony kanał (newR)**:  
-  \[
-  \text{newR} = 0.95 \times \text{originalR}
-  \]
+  `newR = oldR * 0.95`
 
 - **Zielony kanał (newG)**:  
-  \[
-  \text{newG} = 0.433 \times \text{originalG}
-  \]
+  `newG = oldG * 0.433`
 
 - **Niebieski kanał (newB)**:  
-  \[
-  \text{newB} = 0.567 \times \text{originalB}
-  \]
+  `newB = oldB * 0.567`
+
 
 ### Kluczowe funkcje:
 - **Wybór typu daltonizmu**: Deuteranopia, Protanopia, Tritanopia.
@@ -116,55 +99,37 @@ Specifically:
 People with deuteranopia have difficulty distinguishing green and red shades. The transformation formulas are as follows:
 
 - **Red channel (newR)**:  
-  \[
-  \text{newR} = 0.625 \times \text{originalR} + 0.375 \times \text{originalG}
-  \]
+ `newR = oldR * 0.625 + oldG * 0.375`
 
 - **Green channel (newG)**:  
-  \[
-  \text{newG} = 0.7 \times \text{originalG}
-  \]
+  `newG = oldG * 0.7`
 
 - **Blue channel (newB)**:  
-  \[
-  \text{newB} = 0.8 \times \text{originalB}
-  \]
+  `newB = oldB * 0.8`
 
 #### 2. **Protanopia** (type 1)
 For people with protanopia, difficulty lies in distinguishing red hues. The formulas for this type are:
 
 - **Red channel (newR)**:  
-  \[
-  \text{newR} = 0.567 \times \text{originalR} + 0.433 \times \text{originalG}
-  \]
+  `newR = oldR * 0.567 + oldG * 0.433`
 
 - **Green channel (newG)**:  
-  \[
-  \text{newG} = 0.558 \times \text{originalG}
-  \]
+  `newG = oldG * 0.558`
 
 - **Blue channel (newB)**:  
-  \[
-  \text{newB} = 0 \times \text{originalB}
-  \]
+  `newB = oldB * 0`
 
 #### 3. **Tritanopia** (type 2)
 In the case of tritanopia, there are issues with distinguishing blue and green hues. The formulas for this type are:
 
 - **Red channel (newR)**:  
-  \[
-  \text{newR} = 0.95 \times \text{originalR}
-  \]
+  `newR = oldR * 0.95`
 
 - **Green channel (newG)**:  
-  \[
-  \text{newG} = 0.433 \times \text{originalG}
-  \]
+  `newG = oldG * 0.433`
 
 - **Blue channel (newB)**:  
-  \[
-  \text{newB} = 0.567 \times \text{originalB}
-  \]
+  `newB = oldB * 0.567`
 
 ### Key Features:
 - **Choose color blindness type**: Deuteranopia, Protanopia, Tritanopia.
