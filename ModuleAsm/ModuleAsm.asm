@@ -1,4 +1,4 @@
-﻿.code
+.code
 DeuteranopiaAsm proc
     ; Save callee-saved registers
     push rbx
@@ -30,7 +30,7 @@ DeuteranopiaAsm proc
 ; Wzory:
 ; newR = (originalR * 0.625 + originalG * 0.375)
 ; newG = (originalG * 0.7)
-; newB = (originalB * 0.😎
+; newB = (originalB * 0.0)
 ;
 ProcessPixelLoopDeuteranopia:
     xor rax, rax
