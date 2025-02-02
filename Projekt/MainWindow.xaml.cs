@@ -149,10 +149,9 @@ namespace Projekt
                 
 
                 stopwatch.Stop();   // Stop stopwatch for ASM
-                asmTime = stopwatch.ElapsedMilliseconds;   // save time
-
-
-                asmTimeText.Text = $"{asmTime} ms";   // Update time w GUI
+                TimeSpan elapsed = stopwatch.Elapsed; // Save time
+                string preciseTime = $"{elapsed.TotalMilliseconds:F3}";
+                asmTimeText.Text = $"{preciseTime} ms";   // Update time w GUI
                 MessageBox.Show("Obraz przetworzony w ASM.");   // Success message for ASM
             }
 
@@ -174,12 +173,12 @@ namespace Projekt
                     ProcessColorBlindnessCS(2, threadCount);
                 }
                 stopwatch.Stop();   // Stop stopwatch for C#
-                cSharpTime = stopwatch.ElapsedMilliseconds; // Save time
-
-                cSharpTimeText.Text = $"{cSharpTime} ms";   // Update time w GUI
+                TimeSpan elapsed = stopwatch.Elapsed; // Save time
+                string preciseTime = $"{elapsed.TotalMilliseconds:F3}";
+                cSharpTimeText.Text = $"{preciseTime} ms";   // Update time w GUI
                 MessageBox.Show("Obraz przetworzony w C#.");
             }
-
+            
             // Showing in GUI processed image
             imageControl.Source = BitmapToImageSource(_processedImage);
         }
@@ -346,48 +345,61 @@ namespace Projekt
             // Getting chosen type of color blindness from ComboBox
             string selectedColorBlindness = (colorBlindnessComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
             int threadCount = (int)threadSlider.Value;                  // Get the thread count from the slide
-
-            // Debuging C# method
-            for (int i = 0; i < debugIterations; i++)
+            int debugThread = 1;
+            for (int j = 1; j <= 7;j++)
             {
-                stopwatch.Restart();
-                if (selectedColorBlindness == "Deuteranopia")
+                if(j == 1)
+                    debugThread = j;
+                threadCount = debugThread;
+                for (int i = 0; i < debugIterations; i++)
                 {
-                    ProcessColorBlindnessCS(0, threadCount);
+                    stopwatch.Restart();
+                    if (selectedColorBlindness == "Deuteranopia")
+                    {
+                        ProcessColorBlindnessCS(0, threadCount);
+                    }
+                    else if (selectedColorBlindness == "Protanopia")
+                    {
+                        ProcessColorBlindnessCS(1, threadCount);
+                    }
+                    else if (selectedColorBlindness == "Tritanopia")
+                    {
+                        ProcessColorBlindnessCS(2, threadCount);
+                    }
+                    stopwatch.Stop();
+                    TimeSpan elapsed = stopwatch.Elapsed; // Save time
+                    string preciseTime = $"{elapsed.TotalMilliseconds:F3}";
+                    Console.WriteLine(debugThread + " c#: " + preciseTime);
+                    totalCSharpTime += stopwatch.ElapsedMilliseconds;
                 }
-                else if (selectedColorBlindness == "Protanopia")
-                {
-                    ProcessColorBlindnessCS(1, threadCount);
-                }
-                else if (selectedColorBlindness == "Tritanopia")
-                {
-                    ProcessColorBlindnessCS(2, threadCount);
-                }
-                stopwatch.Stop();
-                totalCSharpTime += stopwatch.ElapsedMilliseconds;
-            }
-            cSharpTime = totalCSharpTime / debugIterations;
+                cSharpTime = totalCSharpTime / debugIterations;
 
-            // Debuging ASM method
-            for (int i = 0; i < debugIterations; i++)
-            {
-                stopwatch.Restart();
-                if (selectedColorBlindness == "Deuteranopia")
+                // Debuging ASM method
+                for (int i = 0; i < debugIterations; i++)
                 {
-                    ProcessColorBlindnessAsm(0);
+                    stopwatch.Restart();
+                    if (selectedColorBlindness == "Deuteranopia")
+                    {
+                        ProcessColorBlindnessAsm(0);
+                    }
+                    else if (selectedColorBlindness == "Protanopia")
+                    {
+                        ProcessColorBlindnessAsm(1);
+                    }
+                    else if (selectedColorBlindness == "Tritanopia")
+                    {
+                        ProcessColorBlindnessAsm(2);
+                    }
+                    stopwatch.Stop();
+                    TimeSpan elapsed = stopwatch.Elapsed; // Save time
+                    string preciseTime = $"{elapsed.TotalMilliseconds:F3}";
+                    Console.WriteLine(debugThread + " asm: " + preciseTime);
+                    totalAsmTime += stopwatch.ElapsedMilliseconds;
                 }
-                else if (selectedColorBlindness == "Protanopia")
-                {
-                    ProcessColorBlindnessAsm(1);
-                }
-                else if (selectedColorBlindness == "Tritanopia")
-                {
-                    ProcessColorBlindnessAsm(2);
-                }
-                stopwatch.Stop();
-                totalAsmTime += stopwatch.ElapsedMilliseconds;
+                asmTime = totalAsmTime / debugIterations;
+                debugThread = debugThread * 2;
             }
-            asmTime = totalAsmTime / debugIterations;
+            
 
             // Update UI
             cSharpTimeText.Text = $"{cSharpTime} ms";
